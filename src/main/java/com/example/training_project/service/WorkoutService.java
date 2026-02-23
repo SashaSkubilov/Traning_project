@@ -6,7 +6,6 @@ import com.example.training_project.repository.WorkoutRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 public class WorkoutService {
