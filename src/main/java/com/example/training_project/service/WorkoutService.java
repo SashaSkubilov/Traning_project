@@ -23,7 +23,7 @@ public class WorkoutService {
         return repository.findAll().stream()
                 .filter(w -> type == null || w.getType().equalsIgnoreCase(type))
                 .map(mapper::toDto)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     public WorkoutDto getWorkoutById(Long id) {
