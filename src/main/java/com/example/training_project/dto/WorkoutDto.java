@@ -5,4 +5,4 @@ public record WorkoutDto(
         String type,
         Integer durationMinutes,
         String formattedDate
-) {}
+) { }
