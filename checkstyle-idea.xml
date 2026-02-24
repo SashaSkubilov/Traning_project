@@ -1,11 +1,89 @@
-<?xml version="1.0"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE module PUBLIC
         "-//Checkstyle//DTD Checkstyle Configuration 1.3//EN"
         "https://checkstyle.org/dtds/configuration_1_3.dtd">
+
 <module name="Checker">
-  <module name="TreeWalker">
-    <module name="AvoidStarImport"/>
-    <module name="NeedBraces"/>
-    <module name="WhitespaceAround"/>
+  <property name="charset" value="UTF-8"/>
+  <property name="fileExtensions" value="java, properties, xml"/>
+
+  <!-- Отключение проверки на tab-ы в файле -->
+  <module name="FileTabCharacter">
+    <property name="eachLine" value="true"/>
   </module>
+
+  <!-- Максимальная длина строки -->
+  <module name="LineLength">
+    <property name="fileExtensions" value="java"/>
+    <property name="max" value="120"/>
+    <property name="ignorePattern"
+              value="^package.*|^import.*|a href|href|http://|https://|ftp://"/>
+  </module>
+
+  <module name="TreeWalker">
+
+    <!-- Импорты -->
+    <module name="AvoidStarImport"/> <!-- Запрещает import * -->
+    <module name="IllegalImport"/> <!-- Запрещает определенные импорты (например, sun.*) -->
+    <module name="RedundantImport"/> <!-- Запрещает лишние импорты -->
+    <module name="UnusedImports"/> <!-- Запрещает неиспользуемые импорты -->
+
+    <!-- Именование -->
+    <module name="TypeName"/> <!-- Имена классов и интерфейсов -->
+    <module name="MethodName"/> <!-- Имена методов -->
+    <module name="LocalVariableName"/> <!-- Имена локальных переменных -->
+    <module name="ParameterName"/> <!-- Имена параметров -->
+    <module name="ConstantName"/> <!-- Имена констант (final static) -->
+    <module name="MemberName"/> <!-- Имена полей класса -->
+    <module name="ClassTypeParameterName"/> <!-- Generics у классов -->
+    <module name="InterfaceTypeParameterName"/> <!-- Generics у интерфейсов -->
+    <module name="MethodTypeParameterName"/> <!-- Generics у методов -->
+
+    <!-- Блоки и фигурные скобки -->
+    <module name="EmptyBlock"/> <!-- Запрещает пустые блоки -->
+    <module name="NeedBraces"/> <!-- Требует фигурные скобки для однострочных if/else -->
+    <module name="LeftCurly"/> <!-- Позиция открывающей скобки -->
+    <module name="RightCurly"/> <!-- Позиция закрывающей скобки -->
+    <module name="AvoidNestedBlocks"/> <!-- Запрещает вложенные блоки без необходимости -->
+
+    <!-- Отступы -->
+    <module name="Indentation">
+      <property name="basicOffset" value="4"/> <!-- Базовый отступ - 4 пробела -->
+      <property name="braceAdjustment" value="0"/>
+      <property name="caseIndent" value="4"/> <!-- Отступ в switch/case -->
+      <property name="throwsIndent" value="4"/> <!-- Отступ для throws -->
+      <property name="lineWrappingIndentation" value="4"/> <!-- Отступ при переносе строки -->
+      <property name="arrayInitIndent" value="4"/> <!-- Отступ в инициализации массива -->
+    </module>
+
+    <!-- Пробелы -->
+    <module name="GenericWhitespace"/> <!-- Пробелы в generic-ах -->
+    <module name="MethodParamPad"/> <!-- Пробелы вокруг параметров метода -->
+    <module name="ParenPad"/> <!-- Пробелы вокруг круглых скобок -->
+    <module name="TypecastParenPad"/> <!-- Пробелы вокруг приведения типов -->
+    <module name="WhitespaceAfter"/> <!-- Пробел после операторов -->
+    <module name="WhitespaceAround"/> <!-- Пробелы вокруг операторов -->
+    <module name="NoWhitespaceAfter"/> <!-- Запрет пробелов после определенных токенов -->
+    <module name="NoWhitespaceBefore"/> <!-- Запрет пробелов перед определенными токенами -->
+    <module name="EmptyLineSeparator"/> <!-- Пустые строки между секциями -->
+
+    <!-- Модификаторы -->
+    <module name="ModifierOrder"/> <!-- Порядок модификаторов (public static final) -->
+    <module name="RedundantModifier"/> <!-- Убирает лишние модификаторы -->
+
+    <!-- Аннотации -->
+    <module name="AnnotationLocation"/> <!-- Расположение аннотаций -->
+
+    <!-- Разное -->
+    <module name="UpperEll"/> <!-- Требует L для long, а не l -->
+    <module name="ArrayTypeStyle"/> <!-- Стиль массивов: String[] args, а не String args[] -->
+    <module name="MultipleVariableDeclarations"/> <!-- Запрещает несколько переменных в одной строке -->
+    <module name="OneStatementPerLine"/> <!-- Один statement на строку -->
+
+  </module>
+
+  <!-- Дополнительные проверки на уровне файла -->
+  <module name="NewlineAtEndOfFile"/> <!-- Проверяет наличие пустой строки в конце файла -->
+
 </module>
+

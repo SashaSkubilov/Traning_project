@@ -11,6 +11,7 @@ import java.util.List;
 public class WorkoutService {
 
     private final WorkoutRepository repository;
+
     private final WorkoutMapper mapper;
 
     public WorkoutService(WorkoutRepository repository, WorkoutMapper mapper) {
