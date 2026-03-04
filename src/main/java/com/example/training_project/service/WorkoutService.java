@@ -28,10 +28,15 @@ import java.util.Set;
 public class WorkoutService {
 
     private final WorkoutRepository workoutRepository;
+
     private final AthleteRepository athleteRepository;
+
     private final TrainingProgramRepository trainingProgramRepository;
+
     private final ExerciseRepository exerciseRepository;
+
     private final CoachRepository coachRepository;
+
     private final WorkoutMapper workoutMapper;
 
     public WorkoutService(
