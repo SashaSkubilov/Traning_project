@@ -3,19 +3,23 @@ package com.example.training_project.mapper;
 import com.example.training_project.dto.WorkoutDto;
 import com.example.training_project.entity.Workout;
 import org.springframework.stereotype.Component;
-import java.time.format.DateTimeFormatter;
 
+/**
+ * Mapper for converting Workout entity to DTO.
+ */
 @Component
 public class WorkoutMapper {
-    private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
 
-    public WorkoutDto toDto(Workout workout) {
+    public WorkoutDto toDto(final Workout workout) {
         return new WorkoutDto(
                 workout.getId(),
+                workout.getTitle(),
                 workout.getType(),
                 workout.getDurationMinutes(),
-                workout.getDate().format(FORMATTER)
+                workout.getScheduledAt(),
+                workout.getAthlete() != null ? workout.getAthlete().getFullName() : "Unknown",
+                workout.getProgram() != null ? workout.getProgram().getName() : "No Program",
+                workout.getExercises() != null ? workout.getExercises().size() : 0
         );
     }
 }
-

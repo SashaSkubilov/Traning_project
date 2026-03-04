@@ -3,16 +3,15 @@ package com.example.training_project.dto;
 import java.time.LocalDateTime;
 
 /**
- * Data Transfer Object for Workout.
+ * Request DTO for creating or updating a Workout.
  */
-public record WorkoutDto(
-        Long id,
+public record WorkoutCreateUpdateRequest(
         String title,
         String type,
         Integer durationMinutes,
         LocalDateTime scheduledAt,
-        String athleteName,
-        String programName,
-        int exercisesCount
+        Long athleteId,
+        Long programId,
+        java.util.List<Long> exerciseIds
 ) {
 }
