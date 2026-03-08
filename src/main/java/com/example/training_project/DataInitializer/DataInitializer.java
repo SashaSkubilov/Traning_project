@@ -1,4 +1,4 @@
-package com.example.training_project;
+package com.example.training_project.DataInitializer;
 
 import com.example.training_project.entity.Athlete;
 import com.example.training_project.entity.Coach;
