@@ -1,4 +1,4 @@
-package com.example.training_project.DataInitializer;
+package com.example.training_project;
 
 import com.example.training_project.entity.Athlete;
 import com.example.training_project.entity.Coach;
@@ -43,3 +43,4 @@ public class DataInitializer {
         };
     }
 }
+
