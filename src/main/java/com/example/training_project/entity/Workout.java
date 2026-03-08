@@ -11,7 +11,6 @@ import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
@@ -26,14 +25,6 @@ public class Workout {
 
     @Column(name = "type")
     private String type;
-
-    public String getType() {
-        return type;
-    }
-
-    public void setType(String type) {
-        this.type = type;
-    }
 
     @Column(nullable = false)
     private String title;
@@ -72,6 +63,14 @@ public class Workout {
 
     public Long getId() {
         return id;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
     }
 
     public String getTitle() {
@@ -116,5 +115,9 @@ public class Workout {
 
     public Set<Exercise> getExercises() {
         return exercises;
+    }
+
+    public void setExercises(Set<Exercise> exercises) {
+        this.exercises = exercises;
     }
 }
