@@ -35,12 +35,14 @@ erDiagram
 
     coaches {
         bigint id PK
-        varchar full_name
+        varchar first_name
+        varchar last_name
     }
 
     athletes {
         bigint id PK
-        varchar full_name
+        varchar first_name
+        varchar last_name
         bigint coach_id FK
     }
 

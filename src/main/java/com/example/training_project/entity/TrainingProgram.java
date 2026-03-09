@@ -43,5 +43,9 @@ public class TrainingProgram {
     public void setName(String name) {
         this.name = name;
     }
+
+    public List<Workout> getWorkouts() {
+        return workouts;
+    }
 }
 
