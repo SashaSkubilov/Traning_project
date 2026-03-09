@@ -1,8 +1,29 @@
 HELP.md
+
+### Maven / Gradle output ###
 target/
-.mvn/wrapper/maven-wrapper.jar
+build/
+out/
 !**/src/main/**/target/
 !**/src/test/**/target/
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+.mvn/wrapper/maven-wrapper.jar
+
+### Logs / temp files ###
+*.log
+*.tmp
+*.swp
+*.swo
+
+### OS files ###
+.DS_Store
+Thumbs.db
+
+### Spring / local config overrides (оставляем основной application.properties) ###
+application-*.properties
+application-*.yml
 
 ### STS ###
 .apt_generated
@@ -14,7 +35,7 @@ target/
 .sts4-cache
 
 ### IntelliJ IDEA ###
-.idea
+.idea/
 *.iws
 *.iml
 *.ipr
@@ -25,9 +46,6 @@ target/
 /dist/
 /nbdist/
 /.nb-gradle/
-build/
-!**/src/main/**/build/
-!**/src/test/**/build/
 
 ### VS Code ###
 .vscode/
