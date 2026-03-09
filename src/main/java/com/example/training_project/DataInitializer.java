@@ -29,8 +29,8 @@ public class DataInitializer {
             WorkoutRepository workoutRepository
     ) {
         return args -> {
-            Coach coach = coachRepository.save(new Coach("Ivan Petrov"));
-            Athlete athlete = athleteRepository.save(new Athlete("Alex Smirnov", coach));
+            Coach coach = coachRepository.save(new Coach("Ivan", "Petrov"));
+            Athlete athlete = athleteRepository.save(new Athlete("Alex", "Smirnov", coach));
             TrainingProgram program = trainingProgramRepository.save(new TrainingProgram("Mass Gain"));
             Exercise squat = exerciseRepository.save(new Exercise("Squat"));
             Exercise bench = exerciseRepository.save(new Exercise("Bench Press"));

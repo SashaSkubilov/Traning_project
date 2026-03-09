@@ -1,6 +1,7 @@
 package com.example.training_project.entity;
 
 import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -20,7 +21,11 @@ public class Coach {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String fullName;
+    @Column(name = "first_name")
+    private String firstName;
+
+    @Column(name = "last_name")
+    private String lastName;
 
     @OneToMany(mappedBy = "coach", fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)
     private List<Athlete> athletes = new ArrayList<>();
@@ -28,20 +33,29 @@ public class Coach {
     public Coach() {
     }
 
-    public Coach(String fullName) {
-        this.fullName = fullName;
+    public Coach(String firstName, String lastName) {
+        this.firstName = firstName;
+        this.lastName = lastName;
     }
 
     public Long getId() {
         return id;
     }
 
-    public String getFullName() {
-        return fullName;
+    public String getFirstName() {
+        return firstName;
     }
 
-    public void setFullName(String fullName) {
-        this.fullName = fullName;
+    public void setFirstName(String firstName) {
+        this.firstName = firstName;
+    }
+
+    public String getLastName() {
+        return lastName;
+    }
+
+    public void setLastName(String lastName) {
+        this.lastName = lastName;
     }
 
     public List<Athlete> getAthletes() {

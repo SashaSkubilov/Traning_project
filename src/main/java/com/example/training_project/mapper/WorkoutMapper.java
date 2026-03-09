@@ -17,7 +17,9 @@ public class WorkoutMapper {
                 workout.getType(),
                 workout.getDurationMinutes(),
                 workout.getScheduledAt(),
-                workout.getAthlete() != null ? workout.getAthlete().getFullName() : "Unknown",
+                workout.getAthlete() != null
+                        ? workout.getAthlete().getFirstName() + " " + workout.getAthlete().getLastName()
+                        : "Unknown",
                 workout.getProgram() != null ? workout.getProgram().getName() : "No Program",
                 workout.getExercises() != null ? workout.getExercises().size() : 0
         );

@@ -1,6 +1,7 @@
 package com.example.training_project.entity;
 
 import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -22,7 +23,11 @@ public class Athlete {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String fullName;
+    @Column(name = "first_name")
+    private String firstName;
+
+    @Column(name = "last_name")
+    private String lastName;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "coach_id")
@@ -34,8 +39,9 @@ public class Athlete {
     public Athlete() {
     }
 
-    public Athlete(String fullName, Coach coach) {
-        this.fullName = fullName;
+    public Athlete(String firstName, String lastName, Coach coach) {
+        this.firstName = firstName;
+        this.lastName = lastName;
         this.coach = coach;
     }
 
@@ -43,12 +49,20 @@ public class Athlete {
         return id;
     }
 
-    public String getFullName() {
-        return fullName;
+    public String getFirstName() {
+        return firstName;
     }
 
-    public void setFullName(String fullName) {
-        this.fullName = fullName;
+    public void setFirstName(String firstName) {
+        this.firstName = firstName;
+    }
+
+    public String getLastName() {
+        return lastName;
+    }
+
+    public void setLastName(String lastName) {
+        this.lastName = lastName;
     }
 
     public Coach getCoach() {
