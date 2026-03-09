@@ -108,6 +108,17 @@ erDiagram
 - при той же ошибке откатывается вся операция.
 - результат: полное откатывание изменений в рамках метода.
 
+## запрос для проверки @Transactional
+{
+"title": "demo1",
+"type": "demo1",
+"durationMinutes": 70,
+"scheduledAt": "2026-03-05T10:22:25",
+"athleteId": null,
+"programId": 1,
+"exerciseIds": [1]
+}
+
 ## Запуск PostgreSQL
 
 ```bash

@@ -2,8 +2,10 @@ package com.example.training_project.controller;
 
 import com.example.training_project.dto.WorkoutCreateUpdateRequest;
 import com.example.training_project.dto.WorkoutDto;
+import com.example.training_project.dto.WorkoutWithExercisesRequest;
 import com.example.training_project.service.WorkoutService;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -63,23 +65,19 @@ public class WorkoutController {
         workoutService.deleteWorkout(id);
     }
 
-    @PostMapping("/demo/save-without-tx")
-    public String saveWithoutTransaction() {
-        try {
-            workoutService.saveRelatedEntitiesWithoutTransactional();
-        } catch (Exception e) {
-            return "Failed; " + workoutService.getPersistedCounts();
-        }
-        return "Success; " + workoutService.getPersistedCounts();
+    @PostMapping("/with_exercises")
+    public ResponseEntity<WorkoutDto> addWorkoutWithExercises(
+            @RequestBody final WorkoutWithExercisesRequest request
+    ) {
+        WorkoutDto created = workoutService.addWorkoutWithExercises(request);
+        return new ResponseEntity<>(created, HttpStatus.CREATED);
     }
 
-    @PostMapping("/demo/save-with-tx")
-    public String saveWithTransaction() {
-        try {
-            workoutService.saveRelatedEntitiesWithTransactionalRollback();
-        } catch (Exception e) {
-            return "Rolled back; " + workoutService.getPersistedCounts();
-        }
-        return "Success; " + workoutService.getPersistedCounts();
+    @PostMapping("/with_exercises_without_tx")
+    public ResponseEntity<WorkoutDto> addWorkoutWithExercisesWithoutTransaction(
+            @RequestBody final WorkoutWithExercisesRequest request
+    ) {
+        WorkoutDto created = workoutService.addWorkoutWithExercisesWithoutTransaction(request);
+        return new ResponseEntity<>(created, HttpStatus.CREATED);
     }
 }

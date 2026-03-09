@@ -2,8 +2,8 @@ package com.example.training_project.service;
 
 import com.example.training_project.dto.WorkoutCreateUpdateRequest;
 import com.example.training_project.dto.WorkoutDto;
+import com.example.training_project.dto.WorkoutWithExercisesRequest;
 import com.example.training_project.entity.Athlete;
-import com.example.training_project.entity.Coach;
 import com.example.training_project.entity.Exercise;
 import com.example.training_project.entity.TrainingProgram;
 import com.example.training_project.entity.Workout;
@@ -19,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -92,9 +93,21 @@ public class WorkoutService {
 
     @Transactional
     public WorkoutDto updateWorkout(final Long id, final WorkoutCreateUpdateRequest request) {
+
         Workout workout = workoutRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Workout not found: " + id));
         buildWorkoutEntity(workout, request);
+        return workoutMapper.toDto(workoutRepository.save(workout));
+    }
+
+    @Transactional
+    public WorkoutDto addWorkoutWithExercises(final WorkoutWithExercisesRequest request) {
+        Workout workout = buildWorkoutWithExercisesEntity(request);
+        return workoutMapper.toDto(workoutRepository.save(workout));
+    }
+
+    public WorkoutDto addWorkoutWithExercisesWithoutTransaction(final WorkoutWithExercisesRequest request) {
+        Workout workout = buildWorkoutWithExercisesEntity(request);
         return workoutMapper.toDto(workoutRepository.save(workout));
     }
 
@@ -103,33 +116,57 @@ public class WorkoutService {
         workoutRepository.deleteById(id);
     }
 
-    public void saveRelatedEntitiesWithoutTransactional() {
-        Coach coach = coachRepository.save(new Coach("NoTx Coach"));
-        athleteRepository.save(new Athlete("NoTx Athlete", coach));
-        trainingProgramRepository.save(new TrainingProgram("NoTx Program"));
-
-        Workout brokenWorkout = new Workout();
-        brokenWorkout.setTitle(null);
-        workoutRepository.saveAndFlush(brokenWorkout);
-    }
-
-    @Transactional
-    public void saveRelatedEntitiesWithTransactionalRollback() {
-        Coach coach = coachRepository.save(new Coach("Tx Coach"));
-        athleteRepository.save(new Athlete("Tx Athlete", coach));
-        trainingProgramRepository.save(new TrainingProgram("Tx Program"));
-
-        Workout brokenWorkout = new Workout();
-        brokenWorkout.setTitle(null);
-        workoutRepository.saveAndFlush(brokenWorkout);
-    }
-
     @Transactional(readOnly = true)
     public String getPersistedCounts() {
         return "coaches=" + coachRepository.count()
                 + ", athletes=" + athleteRepository.count()
                 + ", programs=" + trainingProgramRepository.count()
+                + ", exercises=" + exerciseRepository.count()
                 + ", workouts=" + workoutRepository.count();
+    }
+
+    private Workout buildWorkoutWithExercisesEntity(final WorkoutWithExercisesRequest request) {
+        Workout workout = new Workout();
+        workout.setTitle(request.title());
+        workout.setType(request.type());
+        workout.setDurationMinutes(request.durationMinutes());
+        workout.setScheduledAt(request.scheduledAt());
+        workout.setAthlete(getAthleteById(request.athleteId()));
+        workout.setProgram(getProgramById(request.programId()));
+
+        saveExercises(request.exerciseNames()).forEach(workout.getExercises()::add);
+        return workout;
+    }
+
+    private List<Exercise> saveExercises(final List<String> exerciseNames) {
+        if (exerciseNames == null) {
+            throw new IllegalArgumentException("exerciseNames must not be null");
+        }
+
+        List<String> normalizedNames = exerciseNames.stream()
+                .filter(Objects::nonNull)
+                .map(String::trim)
+                .filter(name -> !name.isEmpty())
+                .toList();
+
+        if (normalizedNames.isEmpty()) {
+            throw new IllegalArgumentException("exerciseNames must contain at least one value");
+        }
+
+        return normalizedNames.stream()
+                .map(Exercise::new)
+                .map(exerciseRepository::save)
+                .toList();
+    }
+
+    private Athlete getAthleteById(final Long athleteId) {
+        return athleteRepository.findById(athleteId)
+                .orElseThrow(() -> new EntityNotFoundException("Athlete not found: " + athleteId));
+    }
+
+    private TrainingProgram getProgramById(final Long programId) {
+        return trainingProgramRepository.findById(programId)
+                .orElseThrow(() -> new EntityNotFoundException("Program not found: " + programId));
     }
 
     private Workout buildWorkoutEntity(final Workout workout, final WorkoutCreateUpdateRequest request) {
