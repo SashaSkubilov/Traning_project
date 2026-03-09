@@ -98,12 +98,12 @@ erDiagram
 
 Для демонстрации реализованы два endpoint:
 
-- `POST /api/workouts/demo/save-without-tx`
+- `POST /api/workouts/with_exercises_without_tx`
 - вызывает метод **без** `@Transactional`.
 - сначала сохраняет Coach/Athlete/Program, затем пытается сохранить некорректную Workout (`title=null`, NOT NULL constraint).
 - результат: часть данных уже в БД (частичное сохранение).
 
-- `POST /api/workouts/demo/save-with-tx`
+- `POST /api/workouts/with_exercises`
 - вызывает метод **с** `@Transactional`.
 - при той же ошибке откатывается вся операция.
 - результат: полное откатывание изменений в рамках метода.
