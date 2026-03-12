@@ -1,7 +1,7 @@
 package com.example.training_project.controller;
 
+import com.example.training_project.dto.ExerciseCreateUpdateRequest;
 import com.example.training_project.dto.ExerciseDto;
-import com.example.training_project.entity.Exercise;
 import com.example.training_project.service.ExerciseService;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -38,13 +38,14 @@ public class ExerciseController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public ExerciseDto create(@RequestBody final Exercise exercise) {
-        return exerciseService.create(exercise);
+    public ExerciseDto create(@RequestBody final ExerciseCreateUpdateRequest request) {
+        return exerciseService.create(request);
     }
 
     @PutMapping("/{id}")
-    public ExerciseDto update(@PathVariable final Long id, @RequestBody final Exercise exercise) {
-        return exerciseService.update(id, exercise);
+    public ExerciseDto update(@PathVariable final Long id,
+                              @RequestBody final ExerciseCreateUpdateRequest request) {
+        return exerciseService.update(id, request);
     }
 
     @DeleteMapping("/{id}")

@@ -1,5 +1,6 @@
 package com.example.training_project.service;
 
+import com.example.training_project.dto.ExerciseCreateUpdateRequest;
 import com.example.training_project.dto.ExerciseDto;
 import com.example.training_project.entity.Exercise;
 import com.example.training_project.mapper.ExerciseMapper;
@@ -14,6 +15,7 @@ import java.util.List;
 public class ExerciseService {
 
     private final ExerciseRepository exerciseRepository;
+
     private final ExerciseMapper exerciseMapper;
 
     public ExerciseService(final ExerciseRepository exerciseRepository, final ExerciseMapper exerciseMapper) {
@@ -36,16 +38,18 @@ public class ExerciseService {
     }
 
     @Transactional
-    public ExerciseDto create(final Exercise exercise) {
+    public ExerciseDto create(final ExerciseCreateUpdateRequest request) {
+        Exercise exercise = new Exercise();
+        exercise.setName(request.name());
         return exerciseMapper.toDto(exerciseRepository.save(exercise));
     }
 
     @Transactional
-    public ExerciseDto update(final Long id, final Exercise exercise) {
+    public ExerciseDto update(final Long id, final ExerciseCreateUpdateRequest request) {
         Exercise existing = exerciseRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Exercise not found: " + id));
 
-        existing.setName(exercise.getName());
+        existing.setName(request.name());
 
         return exerciseMapper.toDto(exerciseRepository.save(existing));
     }

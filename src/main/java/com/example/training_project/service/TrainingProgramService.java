@@ -1,5 +1,6 @@
 package com.example.training_project.service;
 
+import com.example.training_project.dto.TrainingProgramCreateUpdateRequest;
 import com.example.training_project.dto.TrainingProgramDto;
 import com.example.training_project.entity.TrainingProgram;
 import com.example.training_project.mapper.TrainingProgramMapper;
@@ -14,6 +15,7 @@ import java.util.List;
 public class TrainingProgramService {
 
     private final TrainingProgramRepository trainingProgramRepository;
+
     private final TrainingProgramMapper trainingProgramMapper;
 
     public TrainingProgramService(
@@ -39,16 +41,18 @@ public class TrainingProgramService {
     }
 
     @Transactional
-    public TrainingProgramDto create(final TrainingProgram program) {
+    public TrainingProgramDto create(final TrainingProgramCreateUpdateRequest request) {
+        TrainingProgram program = new TrainingProgram();
+        program.setName(request.name());
         return trainingProgramMapper.toDto(trainingProgramRepository.save(program));
     }
 
     @Transactional
-    public TrainingProgramDto update(final Long id, final TrainingProgram program) {
+    public TrainingProgramDto update(final Long id, final TrainingProgramCreateUpdateRequest request) {
         TrainingProgram existing = trainingProgramRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Program not found: " + id));
 
-        existing.setName(program.getName());
+        existing.setName(request.name());
 
         return trainingProgramMapper.toDto(trainingProgramRepository.save(existing));
     }

@@ -1,7 +1,7 @@
 package com.example.training_project.controller;
 
+import com.example.training_project.dto.CoachCreateUpdateRequest;
 import com.example.training_project.dto.CoachDto;
-import com.example.training_project.entity.Coach;
 import com.example.training_project.service.CoachService;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -38,13 +38,14 @@ public class CoachController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public CoachDto create(@RequestBody final Coach coach) {
-        return coachService.create(coach);
+    public CoachDto create(@RequestBody final CoachCreateUpdateRequest request) {
+        return coachService.create(request);
     }
 
     @PutMapping("/{id}")
-    public CoachDto update(@PathVariable final Long id, @RequestBody final Coach coach) {
-        return coachService.update(id, coach);
+    public CoachDto update(@PathVariable final Long id,
+                           @RequestBody final CoachCreateUpdateRequest request) {
+        return coachService.update(id, request);
     }
 
     @DeleteMapping("/{id}")

@@ -102,13 +102,11 @@ public class WorkoutService {
 
     @Transactional
     public WorkoutDto addWorkoutWithExercises(final WorkoutWithExercisesRequest request) {
-        Workout workout = buildWorkoutWithExercisesEntity(request);
-        return workoutMapper.toDto(workoutRepository.save(workout));
+        return addWorkoutWithExercisesInternal(request, true);
     }
 
     public WorkoutDto addWorkoutWithExercisesWithoutTransaction(final WorkoutWithExercisesRequest request) {
-        Workout workout = buildWorkoutWithExercisesEntity(request);
-        return workoutMapper.toDto(workoutRepository.save(workout));
+        return addWorkoutWithExercisesInternal(request, true);
     }
 
     @Transactional
@@ -123,6 +121,15 @@ public class WorkoutService {
                 + ", programs=" + trainingProgramRepository.count()
                 + ", exercises=" + exerciseRepository.count()
                 + ", workouts=" + workoutRepository.count();
+    }
+
+    private WorkoutDto addWorkoutWithExercisesInternal(final WorkoutWithExercisesRequest request,
+                                                       final boolean simulateFailure) {
+        Workout workout = buildWorkoutWithExercisesEntity(request);
+        if (simulateFailure && "FAIL".equalsIgnoreCase(request.title())) {
+            throw new RuntimeException("Simulated failure after saving exercises");
+        }
+        return workoutMapper.toDto(workoutRepository.save(workout));
     }
 
     private Workout buildWorkoutWithExercisesEntity(final WorkoutWithExercisesRequest request) {

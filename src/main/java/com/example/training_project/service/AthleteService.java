@@ -1,9 +1,12 @@
 package com.example.training_project.service;
 
+import com.example.training_project.dto.AthleteCreateUpdateRequest;
 import com.example.training_project.dto.AthleteDto;
 import com.example.training_project.entity.Athlete;
+import com.example.training_project.entity.Coach;
 import com.example.training_project.mapper.AthleteMapper;
 import com.example.training_project.repository.AthleteRepository;
+import com.example.training_project.repository.CoachRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,10 +17,18 @@ import java.util.List;
 public class AthleteService {
 
     private final AthleteRepository athleteRepository;
+
+    private final CoachRepository coachRepository;
+
     private final AthleteMapper athleteMapper;
 
-    public AthleteService(final AthleteRepository athleteRepository, final AthleteMapper athleteMapper) {
+    public AthleteService(
+            final AthleteRepository athleteRepository,
+            final CoachRepository coachRepository,
+            final AthleteMapper athleteMapper
+    ) {
         this.athleteRepository = athleteRepository;
+        this.coachRepository = coachRepository;
         this.athleteMapper = athleteMapper;
     }
 
@@ -36,20 +47,33 @@ public class AthleteService {
     }
 
     @Transactional
-    public AthleteDto create(final Athlete athlete) {
+    public AthleteDto create(final AthleteCreateUpdateRequest request) {
+        Athlete athlete = new Athlete();
+        applyRequestToEntity(athlete, request);
         return athleteMapper.toDto(athleteRepository.save(athlete));
     }
 
     @Transactional
-    public AthleteDto update(final Long id, final Athlete athlete) {
+    public AthleteDto update(final Long id, final AthleteCreateUpdateRequest request) {
         Athlete existing = athleteRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Athlete not found: " + id));
 
-        existing.setFirstName(athlete.getFirstName());
-        existing.setLastName(athlete.getLastName());
-        existing.setCoach(athlete.getCoach());
+        applyRequestToEntity(existing, request);
 
         return athleteMapper.toDto(athleteRepository.save(existing));
+    }
+
+    private void applyRequestToEntity(final Athlete athlete, final AthleteCreateUpdateRequest request) {
+        athlete.setFirstName(request.firstName());
+        athlete.setLastName(request.lastName());
+
+        if (request.coachId() != null) {
+            Coach coach = coachRepository.findById(request.coachId())
+                    .orElseThrow(() -> new EntityNotFoundException("Coach not found: " + request.coachId()));
+            athlete.setCoach(coach);
+        } else {
+            athlete.setCoach(null);
+        }
     }
 
     @Transactional

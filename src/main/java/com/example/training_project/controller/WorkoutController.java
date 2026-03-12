@@ -65,6 +65,11 @@ public class WorkoutController {
         workoutService.deleteWorkout(id);
     }
 
+    @GetMapping("/persisted_counts")
+    public String getPersistedCounts() {
+        return workoutService.getPersistedCounts();
+    }
+
     @PostMapping("/with_exercises")
     public ResponseEntity<WorkoutDto> addWorkoutWithExercises(
             @RequestBody final WorkoutWithExercisesRequest request
