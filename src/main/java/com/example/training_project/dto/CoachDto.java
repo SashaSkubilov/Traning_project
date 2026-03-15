@@ -7,4 +7,3 @@ public record CoachDto(
         int athletesCount
 ) {
 }
-

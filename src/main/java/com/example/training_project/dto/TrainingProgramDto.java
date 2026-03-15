@@ -6,4 +6,3 @@ public record TrainingProgramDto(
         int workoutsCount
 ) {
 }
-

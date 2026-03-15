@@ -4,4 +4,3 @@ public record TrainingProgramCreateUpdateRequest(
         String name
 ) {
 }
-

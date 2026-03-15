@@ -5,4 +5,3 @@ public record CoachCreateUpdateRequest(
         String lastName
 ) {
 }
-

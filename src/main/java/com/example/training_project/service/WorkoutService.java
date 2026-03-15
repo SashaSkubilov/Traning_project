@@ -14,9 +14,13 @@ import com.example.training_project.repository.ExerciseRepository;
 import com.example.training_project.repository.TrainingProgramRepository;
 import com.example.training_project.repository.WorkoutRepository;
 import jakarta.persistence.EntityNotFoundException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
@@ -39,6 +43,11 @@ public class WorkoutService {
     private final CoachRepository coachRepository;
 
     private final WorkoutMapper workoutMapper;
+
+    /**
+     * In-memory index for previously fetched workout pages.
+     */
+    private final Map<WorkoutFilterKey, Page<WorkoutDto>> workoutIndex = new ConcurrentHashMap<>();
 
     public WorkoutService(
             final WorkoutRepository workoutRepository,
@@ -71,6 +80,50 @@ public class WorkoutService {
                 .toList();
     }
 
+    /**
+     * Complex search using JPQL-based repository query with pagination and in-memory index.
+     */
+    @Transactional(readOnly = true)
+    public Page<WorkoutDto> searchWorkoutsJpql(final String type,
+                                               final Long coachId,
+                                               final Long programId,
+                                               final Pageable pageable) {
+        WorkoutFilterKey key = WorkoutFilterKey.forQuery(
+                WorkoutFilterKey.QueryType.JPQL,
+                type,
+                coachId,
+                programId,
+                pageable
+        );
+
+        return workoutIndex.computeIfAbsent(key, k ->
+                workoutRepository.findByFiltersJpql(type, coachId, programId, pageable)
+                        .map(workoutMapper::toDto)
+        );
+    }
+
+    /**
+     * Complex search using native query with pagination and in-memory index.
+     */
+    @Transactional(readOnly = true)
+    public Page<WorkoutDto> searchWorkoutsNative(final String type,
+                                                 final Long coachId,
+                                                 final Long programId,
+                                                 final Pageable pageable) {
+        WorkoutFilterKey key = WorkoutFilterKey.forQuery(
+                WorkoutFilterKey.QueryType.NATIVE,
+                type,
+                coachId,
+                programId,
+                pageable
+        );
+
+        return workoutIndex.computeIfAbsent(key, k ->
+                workoutRepository.findByFiltersNative(type, coachId, programId, pageable)
+                        .map(workoutMapper::toDto)
+        );
+    }
+
     @Transactional(readOnly = true)
     public List<WorkoutDto> getAllWorkoutsOptimized() {
         return workoutRepository.findAllWithDetails().stream()
@@ -88,7 +141,9 @@ public class WorkoutService {
     @Transactional
     public WorkoutDto createWorkout(final WorkoutCreateUpdateRequest request) {
         Workout workout = buildWorkoutEntity(new Workout(), request);
-        return workoutMapper.toDto(workoutRepository.save(workout));
+        WorkoutDto result = workoutMapper.toDto(workoutRepository.save(workout));
+        invalidateWorkoutIndex();
+        return result;
     }
 
     @Transactional
@@ -97,21 +152,28 @@ public class WorkoutService {
         Workout workout = workoutRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Workout not found: " + id));
         buildWorkoutEntity(workout, request);
-        return workoutMapper.toDto(workoutRepository.save(workout));
+        WorkoutDto result = workoutMapper.toDto(workoutRepository.save(workout));
+        invalidateWorkoutIndex();
+        return result;
     }
 
     @Transactional
     public WorkoutDto addWorkoutWithExercises(final WorkoutWithExercisesRequest request) {
-        return addWorkoutWithExercisesInternal(request, true);
+        WorkoutDto result = addWorkoutWithExercisesInternal(request, true);
+        invalidateWorkoutIndex();
+        return result;
     }
 
     public WorkoutDto addWorkoutWithExercisesWithoutTransaction(final WorkoutWithExercisesRequest request) {
-        return addWorkoutWithExercisesInternal(request, true);
+        WorkoutDto result = addWorkoutWithExercisesInternal(request, true);
+        invalidateWorkoutIndex();
+        return result;
     }
 
     @Transactional
     public void deleteWorkout(final Long id) {
         workoutRepository.deleteById(id);
+        invalidateWorkoutIndex();
     }
 
     @Transactional(readOnly = true)
@@ -197,5 +259,84 @@ public class WorkoutService {
         }
 
         return workout;
+    }
+
+    private void invalidateWorkoutIndex() {
+        workoutIndex.clear();
+    }
+
+    /**
+     * Composite key for the in-memory workout index.
+     */
+    private static final class WorkoutFilterKey {
+
+        enum QueryType {
+            JPQL,
+            NATIVE
+        }
+
+        private final QueryType queryType;
+        private final String type;
+        private final Long coachId;
+        private final Long programId;
+        private final int pageNumber;
+        private final int pageSize;
+        private final String sort;
+
+        private WorkoutFilterKey(final QueryType queryType,
+                                 final String type,
+                                 final Long coachId,
+                                 final Long programId,
+                                 final int pageNumber,
+                                 final int pageSize,
+                                 final String sort) {
+            this.queryType = queryType;
+            this.type = type;
+            this.coachId = coachId;
+            this.programId = programId;
+            this.pageNumber = pageNumber;
+            this.pageSize = pageSize;
+            this.sort = sort;
+        }
+
+        static WorkoutFilterKey forQuery(final QueryType queryType,
+                                         final String type,
+                                         final Long coachId,
+                                         final Long programId,
+                                         final Pageable pageable) {
+            String sort = pageable.getSort().isUnsorted() ? "" : pageable.getSort().toString();
+            return new WorkoutFilterKey(
+                    queryType,
+                    type,
+                    coachId,
+                    programId,
+                    pageable.getPageNumber(),
+                    pageable.getPageSize(),
+                    sort
+            );
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) {
+                return true;
+            }
+            if (o == null || getClass() != o.getClass()) {
+                return false;
+            }
+            WorkoutFilterKey that = (WorkoutFilterKey) o;
+            return pageNumber == that.pageNumber
+                    && pageSize == that.pageSize
+                    && queryType == that.queryType
+                    && Objects.equals(type, that.type)
+                    && Objects.equals(coachId, that.coachId)
+                    && Objects.equals(programId, that.programId)
+                    && Objects.equals(sort, that.sort);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(queryType, type, coachId, programId, pageNumber, pageSize, sort);
+        }
     }
 }

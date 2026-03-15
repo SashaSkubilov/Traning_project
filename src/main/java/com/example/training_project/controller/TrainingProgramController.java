@@ -54,4 +54,3 @@ public class TrainingProgramController {
         trainingProgramService.delete(id);
     }
 }
-

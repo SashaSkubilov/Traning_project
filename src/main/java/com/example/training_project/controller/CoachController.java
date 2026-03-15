@@ -54,4 +54,3 @@ public class CoachController {
         coachService.delete(id);
     }
 }
-

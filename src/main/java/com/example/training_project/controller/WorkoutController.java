@@ -4,6 +4,8 @@ import com.example.training_project.dto.WorkoutCreateUpdateRequest;
 import com.example.training_project.dto.WorkoutDto;
 import com.example.training_project.dto.WorkoutWithExercisesRequest;
 import com.example.training_project.service.WorkoutService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -35,6 +37,26 @@ public class WorkoutController {
     @GetMapping
     public List<WorkoutDto> getAll(@RequestParam(required = false) final String type) {
         return workoutService.getWorkouts(type);
+    }
+
+    @GetMapping("/search/jpql")
+    public Page<WorkoutDto> searchJpql(
+            @RequestParam(required = false) final String type,
+            @RequestParam(required = false) final Long coachId,
+            @RequestParam(required = false) final Long programId,
+            final Pageable pageable
+    ) {
+        return workoutService.searchWorkoutsJpql(type, coachId, programId, pageable);
+    }
+
+    @GetMapping("/search/native")
+    public Page<WorkoutDto> searchNative(
+            @RequestParam(required = false) final String type,
+            @RequestParam(required = false) final Long coachId,
+            @RequestParam(required = false) final Long programId,
+            final Pageable pageable
+    ) {
+        return workoutService.searchWorkoutsNative(type, coachId, programId, pageable);
     }
 
     @GetMapping("/optimized")
