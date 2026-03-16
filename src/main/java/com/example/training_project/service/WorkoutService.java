@@ -14,6 +14,8 @@ import com.example.training_project.repository.ExerciseRepository;
 import com.example.training_project.repository.TrainingProgramRepository;
 import com.example.training_project.repository.WorkoutRepository;
 import jakarta.persistence.EntityNotFoundException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -25,12 +27,15 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.Supplier;
 
 /**
  * Service for managing workouts and demonstrating transactional behavior.
  */
 @Service
 public class WorkoutService {
+
+    private static final Logger LOG = LoggerFactory.getLogger(WorkoutService.class);
 
     private final WorkoutRepository workoutRepository;
 
@@ -96,8 +101,9 @@ public class WorkoutService {
                 pageable
         );
 
-        return workoutIndex.computeIfAbsent(key, k ->
-                workoutRepository.findByFiltersJpql(type, coachId, programId, pageable)
+        return getOrLoadFromIndex(
+                key,
+                () -> workoutRepository.findByFiltersJpql(type, coachId, programId, pageable)
                         .map(workoutMapper::toDto)
         );
     }
@@ -118,8 +124,9 @@ public class WorkoutService {
                 pageable
         );
 
-        return workoutIndex.computeIfAbsent(key, k ->
-                workoutRepository.findByFiltersNative(type, coachId, programId, pageable)
+        return getOrLoadFromIndex(
+                key,
+                () -> workoutRepository.findByFiltersNative(type, coachId, programId, pageable)
                         .map(workoutMapper::toDto)
         );
     }
@@ -262,7 +269,23 @@ public class WorkoutService {
     }
 
     private void invalidateWorkoutIndex() {
+        int previousSize = workoutIndex.size();
         workoutIndex.clear();
+        LOG.info("Workout index invalidated. Entries removed: {}", previousSize);
+    }
+
+    private Page<WorkoutDto> getOrLoadFromIndex(final WorkoutFilterKey key,
+                                                final Supplier<Page<WorkoutDto>> loader) {
+        Page<WorkoutDto> cached = workoutIndex.get(key);
+        if (cached != null) {
+            LOG.info("Workout index HIT for key: {}", key);
+            return cached;
+        }
+
+        LOG.info("Workout index MISS for key: {}", key);
+        Page<WorkoutDto> loaded = loader.get();
+        workoutIndex.put(key, loaded);
+        return loaded;
     }
 
     /**
@@ -337,6 +360,19 @@ public class WorkoutService {
         @Override
         public int hashCode() {
             return Objects.hash(queryType, type, coachId, programId, pageNumber, pageSize, sort);
+        }
+
+        @Override
+        public String toString() {
+            return "WorkoutFilterKey{"
+                    + "queryType=" + queryType
+                    + ", type='" + type + '\''
+                    + ", coachId=" + coachId
+                    + ", programId=" + programId
+                    + ", pageNumber=" + pageNumber
+                    + ", pageSize=" + pageSize
+                    + ", sort='" + sort + '\''
+                    + '}';
         }
     }
 }
