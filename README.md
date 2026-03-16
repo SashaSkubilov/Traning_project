@@ -8,6 +8,12 @@
 4. Осознанное применение `CascadeType` и `FetchType` (используется только LAZY).
 5. Проблему N+1 и её решение через `@EntityGraph`.
 6. Сценарий частичного сохранения без `@Transactional` и откат с `@Transactional`.
+7. Сложный `GET`-запрос с фильтрацией по вложенной сущности через `@Query` (JPQL).
+8. Аналогичный запрос через `native query`.
+9. Пагинацию результатов с использованием `Pageable`.
+10. In-memory индекс на базе `HashMap<K, V>` для ранее запрошенных данных с составным ключом.
+11. Корректную работу составного ключа за счёт правильной реализации `equals()` и `hashCode()`.
+12. Инвалидацию in-memory индекса при изменении данных.
 
 ## Сущности и связи
 
@@ -95,6 +101,66 @@ erDiagram
 - `GET /api/workouts`
 - `PUT /api/workouts/{id}`
 - `DELETE /api/workouts/{id}`
+
+## Примеры запросов 3 лаба
+
+> База URL: `http://localhost:8080`
+
+### 1) JPQL + фильтрация по вложенной сущности + Pageable
+
+```bash
+curl -G "http://localhost:8080/api/workouts/search/jpql" \
+  --data-urlencode "coachId=1" \
+  --data-urlencode "programId=1" \
+  --data-urlencode "page=0" \
+  --data-urlencode "size=5" \
+  --data-urlencode "sort=scheduledAt,desc"
+```
+
+### 2) Тот же поиск через native query + Pageable
+
+```bash
+curl -G "http://localhost:8080/api/workouts/search/native" \
+  --data-urlencode "coachId=1" \
+  --data-urlencode "programId=1" \
+  --data-urlencode "page=0" \
+  --data-urlencode "size=5" \
+  --data-urlencode "sort=scheduledAt,desc"
+```
+
+### 3) Демонстрация кэша (in-memory index)
+
+Повтори один и тот же запрос 2 раза подряд — второй раз должен быть `HIT` в логах:
+
+```bash
+curl -G "http://localhost:8080/api/workouts/search/jpql" \
+  --data-urlencode "coachId=1" \
+  --data-urlencode "programId=1" \
+  --data-urlencode "page=0" \
+  --data-urlencode "size=5"
+```
+
+### 4) Демонстрация инвалидации индекса
+
+1. Сначала прогрей кэш (запрос выше).
+2. Затем измени данные (любой `POST/PUT/DELETE` на `/api/workouts`).
+3. Снова вызови тот же поиск — в логах снова будет `MISS`.
+
+Пример создания новой тренировки:
+
+```bash
+curl -X POST "http://localhost:8080/api/workouts" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "Demo cache invalidation",
+    "type": "Strength",
+    "durationMinutes": 55,
+    "scheduledAt": "2026-03-05T10:22:25",
+    "athleteId": 1,
+    "programId": 1,
+    "exerciseIds": [1, 2]
+  }'
+```
 
 ## Транзакции: с и без @Transactional
 

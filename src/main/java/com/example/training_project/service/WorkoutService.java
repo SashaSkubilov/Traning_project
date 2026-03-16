@@ -278,11 +278,11 @@ public class WorkoutService {
                                                 final Supplier<Page<WorkoutDto>> loader) {
         Page<WorkoutDto> cached = workoutIndex.get(key);
         if (cached != null) {
-            LOG.info("Workout index HIT for key: {}", key);
+            LOG.info("Workout index HIT for key: {}", key.toLogSafeString());
             return cached;
         }
 
-        LOG.info("Workout index MISS for key: {}", key);
+        LOG.info("Workout index MISS for key: {}", key.toLogSafeString());
         Page<WorkoutDto> loaded = loader.get();
         workoutIndex.put(key, loaded);
         return loaded;
@@ -362,17 +362,25 @@ public class WorkoutService {
             return Objects.hash(queryType, type, coachId, programId, pageNumber, pageSize, sort);
         }
 
-        @Override
-        public String toString() {
+        String toLogSafeString() {
             return "WorkoutFilterKey{"
                     + "queryType=" + queryType
-                    + ", type='" + type + '\''
+                    + ", type='" + sanitizeForLog(type) + '\''
                     + ", coachId=" + coachId
                     + ", programId=" + programId
                     + ", pageNumber=" + pageNumber
                     + ", pageSize=" + pageSize
-                    + ", sort='" + sort + '\''
+                    + ", sort='" + sanitizeForLog(sort) + '\''
                     + '}';
+        }
+
+        private static String sanitizeForLog(final String value) {
+            if (value == null) {
+                return null;
+            }
+            return value
+                    .replace("\r", "_")
+                    .replace("\n", "_");
         }
     }
 }
