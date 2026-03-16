@@ -171,11 +171,6 @@ public class WorkoutService {
         return result;
     }
 
-    public WorkoutDto addWorkoutWithExercisesWithoutTransaction(final WorkoutWithExercisesRequest request) {
-        WorkoutDto result = addWorkoutWithExercisesInternal(request, true);
-        invalidateWorkoutIndex();
-        return result;
-    }
 
     @Transactional
     public void deleteWorkout(final Long id) {

@@ -99,12 +99,4 @@ public class WorkoutController {
         WorkoutDto created = workoutService.addWorkoutWithExercises(request);
         return new ResponseEntity<>(created, HttpStatus.CREATED);
     }
-
-    @PostMapping("/with_exercises_without_tx")
-    public ResponseEntity<WorkoutDto> addWorkoutWithExercisesWithoutTransaction(
-            @RequestBody final WorkoutWithExercisesRequest request
-    ) {
-        WorkoutDto created = workoutService.addWorkoutWithExercisesWithoutTransaction(request);
-        return new ResponseEntity<>(created, HttpStatus.CREATED);
-    }
 }
