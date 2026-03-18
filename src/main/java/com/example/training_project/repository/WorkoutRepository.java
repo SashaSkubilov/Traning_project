@@ -13,7 +13,7 @@ import java.util.List;
 /**
  * Repository for Workout entities with N+1 problem solutions.
  */
-public interface WorkoutRepository extends JpaRepository<Workout, Long> {
+public interface WorkoutRepository extends JpaRepository<Workout, Long>, WorkoutNativeSearchRepository {
 
     @EntityGraph(attributePaths = {"athlete", "program", "exercises"})
     @Query("select w from Workout w")
@@ -31,36 +31,6 @@ public interface WorkoutRepository extends JpaRepository<Workout, Long> {
               and (:programId is null or p.id = :programId)
             """)
     Page<Workout> findByFiltersJpql(
-            @Param("coachId") Long coachId,
-            @Param("programId") Long programId,
-            Pageable pageable
-    );
-
-    /**
-     * The same query implemented as native SQL with pagination.
-     */
-    @Query(
-            value = """
-                    select w.*
-                    from workouts w
-                    join athletes a on w.athlete_id = a.id
-                    join coaches c on a.coach_id = c.id
-                    join programs p on w.program_id = p.id
-                    where (:coachId is null or c.id = :coachId)
-                      and (:programId is null or p.id = :programId)
-                    """,
-            countQuery = """
-                    select count(*)
-                    from workouts w
-                    join athletes a on w.athlete_id = a.id
-                    join coaches c on a.coach_id = c.id
-                    join programs p on w.program_id = p.id
-                    where (:coachId is null or c.id = :coachId)
-                      and (:programId is null or p.id = :programId)
-                    """,
-            nativeQuery = true
-    )
-    Page<Workout> findByFiltersNative(
             @Param("coachId") Long coachId,
             @Param("programId") Long programId,
             Pageable pageable

@@ -103,7 +103,7 @@ public class WorkoutService {
 
         return getOrLoadFromIndex(
                 key,
-                () -> workoutRepository.findByFiltersJpql( coachId, programId, pageable)
+                () -> workoutRepository.findByFiltersJpql(coachId, programId, pageable)
                         .map(workoutMapper::toDto)
         );
     }
@@ -126,7 +126,7 @@ public class WorkoutService {
 
         return getOrLoadFromIndex(
                 key,
-                () -> workoutRepository.findByFiltersNative( coachId, programId, pageable)
+                () -> workoutRepository.findByFiltersNative(coachId, programId, pageable)
                         .map(workoutMapper::toDto)
         );
     }
@@ -294,11 +294,17 @@ public class WorkoutService {
         }
 
         private final QueryType queryType;
+
         private final String type;
+
         private final Long coachId;
+
         private final Long programId;
+
         private final int pageNumber;
+
         private final int pageSize;
+
         private final String sort;
 
         private WorkoutFilterKey(final QueryType queryType,
