@@ -9,5 +9,9 @@ import org.springframework.data.domain.Pageable;
  */
 public interface WorkoutNativeSearchRepository {
 
-    Page<Workout> findByFiltersNative(String type, Long coachId, Long programId, Pageable pageable);
+    default Page<Workout> findByFiltersNative(final Long coachId,
+                                              final Long programId,
+                                              final Pageable pageable) {
+        return findByFiltersNative(coachId, programId, pageable);
+    }
 }

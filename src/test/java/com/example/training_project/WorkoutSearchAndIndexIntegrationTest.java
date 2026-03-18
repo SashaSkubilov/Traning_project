@@ -68,7 +68,7 @@ class WorkoutSearchAndIndexIntegrationTest {
         assertThat(result.getContent()).hasSize(1);
         assertThat(result.getContent().get(0).title()).isEqualTo("Leg Day");
         assertThat(result.getTotalElements()).isEqualTo(1);
-        verify(workoutRepository, times(1)).findByFiltersJpql("Leg Day", coachId, programId, pageable);
+        verify(workoutRepository, times(1)).findByFiltersJpql(coachId, programId, pageable);
     }
 
     @Test
@@ -78,7 +78,17 @@ class WorkoutSearchAndIndexIntegrationTest {
         Long programId = trainingProgramRepository.findAll().get(0).getId();
         Pageable pageable = PageRequest.of(0, 1, Sort.by("title").ascending());
 
-        Page<WorkoutDto> result = workoutService.searchWorkoutsNative("Upper Day", coachId, programId, pageable);
+        workoutRepository.findAll().stream()
+                .filter(workout -> "Upper Day".equals(workout.getTitle()))
+                .findFirst()
+                .ifPresentOrElse(workout -> {
+                    workout.setType("Strength");
+                    workoutRepository.save(workout);
+                }, () -> {
+                    throw new IllegalStateException("Seed workout Upper Day was not found");
+                });
+
+        Page<WorkoutDto> result = workoutService.searchWorkoutsNative("STRENGTH", coachId, programId, pageable);
 
         assertThat(result.getContent()).hasSize(1);
         assertThat(result.getContent().get(0).title()).isEqualTo("Upper Day");

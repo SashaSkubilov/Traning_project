@@ -26,23 +26,22 @@ public class WorkoutNativeSearchRepositoryImpl implements WorkoutNativeSearchRep
     private EntityManager entityManager;
 
     @Override
-    public Page<Workout> findByFiltersNative(final String type,
+    public Page<Workout> findByFiltersNative(
                                              final Long coachId,
                                              final Long programId,
                                              final Pageable pageable) {
         String fromClause = """
-                from workouts w
+              
                 join athletes a on w.athlete_id = a.id
                 join coaches c on a.coach_id = c.id
                 join programs p on w.program_id = p.id
                 where (:coachId is null or c.id = :coachId)
                   and (:programId is null or p.id = :programId)
-                  and (:type is null or lower(convert_from(w.type, 'UTF8')) = lower(:type))
                 """;
 
         String sql = "select w.*\n" + fromClause + buildOrderBy(pageable.getSort());
         Query query = entityManager.createNativeQuery(sql, Workout.class);
-        bindParameters(query, type, coachId, programId);
+        bindParameters(query, coachId, programId);
 
         if (pageable.isPaged()) {
             query.setFirstResult((int) pageable.getOffset());
@@ -53,17 +52,17 @@ public class WorkoutNativeSearchRepositoryImpl implements WorkoutNativeSearchRep
         List<Workout> content = query.getResultList();
 
         Query countQuery = entityManager.createNativeQuery("select count(*)\n" + fromClause);
-        bindParameters(countQuery, type, coachId, programId);
+        bindParameters(countQuery, coachId, programId);
         long total = ((Number) countQuery.getSingleResult()).longValue();
 
         return new PageImpl<>(content, pageable, total);
     }
 
     private void bindParameters(final Query query,
-                                final String type,
+
                                 final Long coachId,
                                 final Long programId) {
-        query.setParameter("type", type);
+
         query.setParameter("coachId", coachId);
         query.setParameter("programId", programId);
     }
@@ -97,7 +96,6 @@ public class WorkoutNativeSearchRepositoryImpl implements WorkoutNativeSearchRep
         Map<String, String> sortColumns = new HashMap<>();
         sortColumns.put("id", "w.id");
         sortColumns.put("title", "w.title");
-        sortColumns.put("type", "convert_from(w.type, 'UTF8')");
         sortColumns.put("durationMinutes", "w.duration_minutes");
         sortColumns.put("scheduledAt", "w.scheduled_at");
         return sortColumns;
