@@ -17,10 +17,13 @@ import jakarta.persistence.EntityNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.HashSet;
@@ -103,8 +106,12 @@ public class WorkoutService {
 
         return getOrLoadFromIndex(
                 key,
-                () -> workoutRepository.findByFiltersJpql(type, coachId, programId, pageable)
-                        .map(workoutMapper::toDto)
+                () -> searchWorkoutsByType(
+                        () -> workoutRepository.findByFiltersJpql(null, coachId, programId, Pageable.unpaged())
+                                .getContent(),
+                        type,
+                        pageable
+                )
         );
     }
 
@@ -126,9 +133,72 @@ public class WorkoutService {
 
         return getOrLoadFromIndex(
                 key,
-                () -> workoutRepository.findByFiltersNative(type, coachId, programId, pageable)
-                        .map(workoutMapper::toDto)
+                () -> searchWorkoutsByType(
+                        () -> workoutRepository.findByFiltersNative(null, coachId, programId, Pageable.unpaged())
+                                .getContent(),
+                        type,
+                        pageable
+                )
         );
+    }
+
+    private Page<WorkoutDto> searchWorkoutsByType(final Supplier<List<Workout>> workoutsSupplier,
+                                                  final String type,
+                                                  final Pageable pageable) {
+        List<WorkoutDto> filteredWorkouts = sortWorkouts(workoutsSupplier.get(), pageable).stream()
+                .filter(workout -> type == null || type.equalsIgnoreCase(workout.getType()))
+                .map(workoutMapper::toDto)
+                .toList();
+
+        int start = (int) pageable.getOffset();
+        if (start >= filteredWorkouts.size()) {
+            return new PageImpl<>(List.of(), pageable, filteredWorkouts.size());
+        }
+
+        int end = Math.min(start + pageable.getPageSize(), filteredWorkouts.size());
+        return new PageImpl<>(filteredWorkouts.subList(start, end), pageable, filteredWorkouts.size());
+    }
+
+    private List<Workout> sortWorkouts(final List<Workout> workouts, final Pageable pageable) {
+        if (pageable.getSort().isUnsorted()) {
+            return workouts;
+        }
+
+        Comparator<Workout> comparator = null;
+        for (org.springframework.data.domain.Sort.Order order : pageable.getSort()) {
+            Comparator<Workout> fieldComparator = buildWorkoutComparator(order.getProperty());
+            if (fieldComparator == null) {
+                continue;
+            }
+
+            if (order.isDescending()) {
+                fieldComparator = fieldComparator.reversed();
+            }
+
+            comparator = comparator == null ? fieldComparator : comparator.thenComparing(fieldComparator);
+        }
+
+        if (comparator == null) {
+            return workouts;
+        }
+
+        List<Workout> sortedWorkouts = new ArrayList<>(workouts);
+        sortedWorkouts.sort(comparator);
+        return sortedWorkouts;
+    }
+
+    private Comparator<Workout> buildWorkoutComparator(final String property) {
+        return switch (property) {
+            case "id" -> Comparator.comparing(Workout::getId, Comparator.nullsLast(Long::compareTo));
+            case "title" -> Comparator.comparing(Workout::getTitle, String.CASE_INSENSITIVE_ORDER);
+            case "type" -> Comparator.comparing(Workout::getType, Comparator.nullsLast(String.CASE_INSENSITIVE_ORDER));
+            case "durationMinutes" -> Comparator.comparing(
+                    Workout::getDurationMinutes,
+                    Comparator.nullsLast(Integer::compareTo)
+            );
+            case "scheduledAt" -> Comparator.comparing(Workout::getScheduledAt, Comparator.nullsLast(java.time.LocalDateTime::compareTo));
+            default -> null;
+        };
     }
 
     @Transactional(readOnly = true)
