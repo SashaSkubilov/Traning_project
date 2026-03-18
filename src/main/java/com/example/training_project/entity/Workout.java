@@ -11,10 +11,7 @@ import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import org.hibernate.annotations.JdbcTypeCode; // Добавлен импорт
-import java.sql.Types; // Добавлен импорт
 
-import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
@@ -27,9 +24,9 @@ public class Workout {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @JdbcTypeCode(Types.VARCHAR)
+
     @Column(name = "type")
-    private byte[] type;
+    private String type;
 
     @Column(nullable = false)
     private String title;
@@ -71,18 +68,11 @@ public class Workout {
     }
 
     public String getType() {
-        if (type == null) {
-            return null;
-        }
-        return new String(type, StandardCharsets.UTF_8);
+        return type;
     }
 
     public void setType(String type) {
-        if (type == null) {
-            this.type = null;
-            return;
-        }
-        this.type = type.getBytes(StandardCharsets.UTF_8);
+        this.type = type;
     }
 
     public String getTitle() {
