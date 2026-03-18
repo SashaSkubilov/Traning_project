@@ -6,6 +6,7 @@ import com.example.training_project.dto.WorkoutWithExercisesRequest;
 import com.example.training_project.service.WorkoutService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -44,7 +45,7 @@ public class WorkoutController {
             @RequestParam(required = false) final String type,
             @RequestParam(required = false) final Long coachId,
             @RequestParam(required = false) final Long programId,
-            final Pageable pageable
+            @PageableDefault(size = 20) final Pageable pageable
     ) {
         return workoutService.searchWorkoutsJpql(type, coachId, programId, pageable);
     }

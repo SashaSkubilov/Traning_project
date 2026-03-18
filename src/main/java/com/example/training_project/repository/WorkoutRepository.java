@@ -29,10 +29,8 @@ public interface WorkoutRepository extends JpaRepository<Workout, Long> {
             join w.program p
             where (:coachId is null or c.id = :coachId)
               and (:programId is null or p.id = :programId)
-              and (:type is null or lower(w.type) = lower(:type))
             """)
     Page<Workout> findByFiltersJpql(
-            @Param("type") String type,
             @Param("coachId") Long coachId,
             @Param("programId") Long programId,
             Pageable pageable
@@ -50,7 +48,6 @@ public interface WorkoutRepository extends JpaRepository<Workout, Long> {
                     join programs p on w.program_id = p.id
                     where (:coachId is null or c.id = :coachId)
                       and (:programId is null or p.id = :programId)
-                     and (:type is null or lower(w.type) = lower(:type))
                     """,
             countQuery = """
                     select count(*)
@@ -60,12 +57,10 @@ public interface WorkoutRepository extends JpaRepository<Workout, Long> {
                     join programs p on w.program_id = p.id
                     where (:coachId is null or c.id = :coachId)
                       and (:programId is null or p.id = :programId)
-                      and (:type is null or lower(w.type) = lower(:type))
                     """,
             nativeQuery = true
     )
     Page<Workout> findByFiltersNative(
-            @Param("type") String type,
             @Param("coachId") Long coachId,
             @Param("programId") Long programId,
             Pageable pageable
