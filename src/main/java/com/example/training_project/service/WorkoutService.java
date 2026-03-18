@@ -112,13 +112,12 @@ public class WorkoutService {
      * Complex search using native query with pagination and in-memory index.
      */
     @Transactional(readOnly = true)
-    public Page<WorkoutDto> searchWorkoutsNative(final String type,
-                                                 final Long coachId,
+    public Page<WorkoutDto> searchWorkoutsNative(final Long coachId,
                                                  final Long programId,
                                                  final Pageable pageable) {
         WorkoutFilterKey key = WorkoutFilterKey.forQuery(
                 WorkoutFilterKey.QueryType.NATIVE,
-                type,
+                null,
                 coachId,
                 programId,
                 pageable

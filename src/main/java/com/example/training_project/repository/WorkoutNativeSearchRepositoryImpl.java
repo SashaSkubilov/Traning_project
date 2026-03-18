@@ -26,12 +26,11 @@ public class WorkoutNativeSearchRepositoryImpl implements WorkoutNativeSearchRep
     private EntityManager entityManager;
 
     @Override
-    public Page<Workout> findByFiltersNative(
-                                             final Long coachId,
+    public Page<Workout> findByFiltersNative(final Long coachId,
                                              final Long programId,
                                              final Pageable pageable) {
         String fromClause = """
-              
+                from workouts w
                 join athletes a on w.athlete_id = a.id
                 join coaches c on a.coach_id = c.id
                 join programs p on w.program_id = p.id
@@ -59,10 +58,8 @@ public class WorkoutNativeSearchRepositoryImpl implements WorkoutNativeSearchRep
     }
 
     private void bindParameters(final Query query,
-
                                 final Long coachId,
                                 final Long programId) {
-
         query.setParameter("coachId", coachId);
         query.setParameter("programId", programId);
     }

@@ -52,12 +52,11 @@ public class WorkoutController {
 
     @GetMapping("/search/native")
     public Page<WorkoutDto> searchNative(
-            @RequestParam(required = false) final String type,
             @RequestParam(required = false) final Long coachId,
             @RequestParam(required = false) final Long programId,
             final Pageable pageable
     ) {
-        return workoutService.searchWorkoutsNative(type, coachId, programId, pageable);
+        return workoutService.searchWorkoutsNative(coachId, programId, pageable);
     }
 
     @GetMapping("/optimized")
