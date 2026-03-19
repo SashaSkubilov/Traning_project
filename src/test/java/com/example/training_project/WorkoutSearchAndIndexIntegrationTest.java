@@ -87,6 +87,24 @@ class WorkoutSearchAndIndexIntegrationTest {
     }
 
     @Test
+    void nativeSearchIgnoresUnsupportedSortProperties() {
+        Athlete athlete = athleteRepository.findAll().get(0);
+        Long coachId = athlete.getCoach().getId();
+        Long programId = trainingProgramRepository.findAll().get(0).getId();
+        Pageable pageable = PageRequest.of(
+                0,
+                10,
+                Sort.by(Sort.Order.asc("title; drop table workouts"), Sort.Order.asc("title"))
+        );
+
+        Page<WorkoutDto> result = workoutService.searchWorkoutsNative(coachId, programId, pageable);
+
+        assertThat(result.getContent()).hasSize(1);
+        assertThat(result.getContent().get(0).title()).isEqualTo("Leg Day");
+        verify(workoutRepository, times(1)).findByFiltersNative(coachId, programId, pageable);
+    }
+
+    @Test
     void inMemoryIndexUsesCompositeKeyAndIsInvalidatedAfterDataChanges() {
         Pageable pageable = PageRequest.of(0, 10, Sort.by("title").ascending());
 
