@@ -138,10 +138,10 @@ public class WorkoutNativeSearchRepositoryImpl implements WorkoutNativeSearchRep
                 .append(direction);
     }
 
-        private record SortBinding(String property, String direction) {
+    private record SortBinding(String property, String direction) {
 
-            private static SortBinding unsorted() {
-                return new SortBinding("__unsorted__", "asc");
-            }
+        private static SortBinding unsorted() {
+            return new SortBinding("__unsorted__", "asc");
+        }
     }
 }

@@ -19,9 +19,6 @@ public interface WorkoutRepository extends JpaRepository<Workout, Long>, Workout
     @Query("select w from Workout w")
     List<Workout> findAllWithDetails();
 
-    /**
-     * Complex JPQL query with filtering by nested entities and pagination.
-     */
     @Query("""
             select w from Workout w
             join w.athlete a
