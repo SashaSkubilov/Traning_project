@@ -17,6 +17,7 @@ import jakarta.persistence.EntityNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -95,9 +96,30 @@ public class WorkoutService {
 
         return getOrLoadFromIndex(
                 key,
-                () -> workoutRepository.findByFiltersJpql(type, coachName, programName, pageable)
-                        .map(workoutMapper::toDto)
+                () -> loadJpqlSearchPage(type, coachName, programName, pageable)
         );
+    }
+
+    private Page<WorkoutDto> loadJpqlSearchPage(final String type,
+                                                final String coachName,
+                                                final String programName,
+                                                final Pageable pageable) {
+        if (type == null || type.isBlank()) {
+            return workoutRepository.findByFiltersJpql(type, coachName, programName, pageable)
+                    .map(workoutMapper::toDto);
+        }
+
+        Pageable filterPageable = PageRequest.of(0, Integer.MAX_VALUE, pageable.getSort());
+        List<WorkoutDto> filtered = workoutRepository.findByFiltersJpql(null, coachName, programName, filterPageable)
+                .stream()
+                .filter(workout -> type.equalsIgnoreCase(workout.getType()))
+                .map(workoutMapper::toDto)
+                .toList();
+
+        int start = Math.toIntExact(Math.min(pageable.getOffset(), filtered.size()));
+        int end = Math.min(start + pageable.getPageSize(), filtered.size());
+        List<WorkoutDto> pageContent = filtered.subList(start, end);
+        return new org.springframework.data.domain.PageImpl<>(pageContent, pageable, filtered.size());
     }
 
     @Transactional(readOnly = true)

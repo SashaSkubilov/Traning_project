@@ -37,7 +37,6 @@ public interface WorkoutRepository extends JpaRepository<Workout, Long>, Workout
     join w.program p
     where (:coachName is null or lower(concat(c.firstName, ' ', c.lastName)) = lower(:coachName))
     and (:programName is null or lower(p.name) = lower(:programName))
-    and (:type is null or lower(w.type) = lower(:type))
             """,
             countQuery = """
     select count(distinct w.id) from Workout w
@@ -46,7 +45,6 @@ public interface WorkoutRepository extends JpaRepository<Workout, Long>, Workout
     join w.program p
     where (:coachName is null or lower(concat(c.firstName, ' ', c.lastName)) = lower(:coachName))
     and (:programName is null or lower(p.name) = lower(:programName))
-    and (:type is null or lower(w.type) = lower(:type))
             """)
     Page<Workout> findByFiltersJpql(
             @Param("type") String type,

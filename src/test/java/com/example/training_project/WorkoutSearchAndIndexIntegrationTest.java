@@ -72,6 +72,21 @@ class WorkoutSearchAndIndexIntegrationTest {
     }
 
     @Test
+    void jpqlSearchFiltersByTypeInMemoryWithoutTriggeringDatabaseLowerOnByteaColumn() {
+        Athlete athlete = athleteRepository.findAll().get(0);
+        String coachName = athlete.getCoach().getFirstName() + " " + athlete.getCoach().getLastName();
+        String programName = trainingProgramRepository.findAll().get(0).getName();
+        Pageable pageable = PageRequest.of(0, 10, Sort.by("title").ascending());
+
+        Page<WorkoutDto> result = workoutService.searchWorkoutsJpql("strength", coachName, programName, pageable);
+
+        assertThat(result.getContent()).hasSize(1);
+        assertThat(result.getContent().get(0).type()).isEqualTo("Strength");
+        assertThat(result.getTotalElements()).isEqualTo(1);
+        verify(workoutRepository, times(1)).findByFiltersJpql(null, coachName, programName, PageRequest.of(0, Integer.MAX_VALUE, pageable.getSort()));
+    }
+
+    @Test
     void nativeSearchFiltersByNestedEntitiesWithPagination() {
         Athlete athlete = athleteRepository.findAll().get(0);
         String coachName = athlete.getCoach().getFirstName() + " " + athlete.getCoach().getLastName();
