@@ -6,7 +6,7 @@ import org.springframework.data.domain.Pageable;
 
 public interface WorkoutNativeSearchRepository {
 
-    Page<Workout> findByFiltersNative(Long coachId,
-                                      Long programId,
+    Page<Workout> findByFiltersNative(String coachName,
+                                      String programName,
                                       Pageable pageable);
 }

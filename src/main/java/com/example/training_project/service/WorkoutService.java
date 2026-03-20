@@ -82,39 +82,39 @@ public class WorkoutService {
 
     @Transactional(readOnly = true)
     public Page<WorkoutDto> searchWorkoutsJpql(final String type,
-                                               final Long coachId,
-                                               final Long programId,
+                                               final String coachName,
+                                               final String programName,
                                                final Pageable pageable) {
         WorkoutFilterKey key = WorkoutFilterKey.forQuery(
                 WorkoutFilterKey.QueryType.JPQL,
                 type,
-                coachId,
-                programId,
+                coachName,
+                programName,
                 pageable
         );
 
         return getOrLoadFromIndex(
                 key,
-                () -> workoutRepository.findByFiltersJpql(coachId, programId, pageable)
+                () -> workoutRepository.findByFiltersJpql(coachName, programName, pageable)
                         .map(workoutMapper::toDto)
         );
     }
 
     @Transactional(readOnly = true)
-    public Page<WorkoutDto> searchWorkoutsNative(final Long coachId,
-                                                 final Long programId,
+    public Page<WorkoutDto> searchWorkoutsNative(final String coachName,
+                                                 final String programName,
                                                  final Pageable pageable) {
         WorkoutFilterKey key = WorkoutFilterKey.forQuery(
                 WorkoutFilterKey.QueryType.NATIVE,
                 null,
-                coachId,
-                programId,
+                coachName,
+                programName,
                 pageable
         );
 
         return getOrLoadFromIndex(
                 key,
-                () -> workoutRepository.findByFiltersNative(coachId, programId, pageable)
+                () -> workoutRepository.findByFiltersNative(coachName, programName, pageable)
                         .map(workoutMapper::toDto)
         );
     }
@@ -282,9 +282,9 @@ public class WorkoutService {
 
         private final String type;
 
-        private final Long coachId;
+        private final String coachName;
 
-        private final Long programId;
+        private final Long prograName;
 
         private final int pageNumber;
 
@@ -294,15 +294,15 @@ public class WorkoutService {
 
         private WorkoutFilterKey(final QueryType queryType,
                                  final String type,
-                                 final Long coachId,
-                                 final Long programId,
+                                 final String coachName,
+                                 final String programName,
                                  final int pageNumber,
                                  final int pageSize,
                                  final String sort) {
             this.queryType = queryType;
             this.type = type;
-            this.coachId = coachId;
-            this.programId = programId;
+            this.coachName = coachName;
+            this.programName = programName;
             this.pageNumber = pageNumber;
             this.pageSize = pageSize;
             this.sort = sort;
@@ -310,15 +310,15 @@ public class WorkoutService {
 
         static WorkoutFilterKey forQuery(final QueryType queryType,
                                          final String type,
-                                         final Long coachId,
-                                         final Long programId,
+                                         final String coachName,
+                                         final String programName,
                                          final Pageable pageable) {
             String sort = pageable.getSort().isUnsorted() ? "" : pageable.getSort().toString();
             return new WorkoutFilterKey(
                     queryType,
                     type,
-                    coachId,
-                    programId,
+                    coachName,
+                    programName,
                     pageable.getPageNumber(),
                     pageable.getPageSize(),
                     sort
@@ -338,22 +338,22 @@ public class WorkoutService {
                     && pageSize == that.pageSize
                     && queryType == that.queryType
                     && Objects.equals(type, that.type)
-                    && Objects.equals(coachId, that.coachId)
-                    && Objects.equals(programId, that.programId)
+                    && Objects.equals(coachName, that.coachName)
+                    && Objects.equals(programName, that.programName)
                     && Objects.equals(sort, that.sort);
         }
 
         @Override
         public int hashCode() {
-            return Objects.hash(queryType, type, coachId, programId, pageNumber, pageSize, sort);
+            return Objects.hash(queryType, type, coachName, programName, pageNumber, pageSize, sort);
         }
 
         String toLogSafeString() {
             return "WorkoutFilterKey{"
                     + "queryType=" + queryType
                     + ", type='" + sanitizeForLog(type) + '\''
-                    + ", coachId=" + coachId
-                    + ", programId=" + programId
+                    + ", coachName='" + sanitizeForLog(coachName) + '\''
+                    + ", programName='" + sanitizeForLog(programName) + '\''
                     + ", pageNumber=" + pageNumber
                     + ", pageSize=" + pageSize
                     + ", sort='" + sanitizeForLog(sort) + '\''

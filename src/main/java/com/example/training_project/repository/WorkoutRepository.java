@@ -21,12 +21,12 @@ public interface WorkoutRepository extends JpaRepository<Workout, Long>, Workout
             join w.athlete a
             join a.coach c
             join w.program p
-            where (:coachId is null or c.id = :coachId)
-              and (:programId is null or p.id = :programId)
+            where (:coachName is null or lower(concat(c.firstName, ' ', c.lastName)) = lower(:coachName))
+                and (:programName is null or lower(p.name) = lower(:programName))
             """)
     Page<Workout> findByFiltersJpql(
-            @Param("coachId") Long coachId,
-            @Param("programId") Long programId,
+            @Param("coachName") String coachName,
+            @Param("programName") String programName,
             Pageable pageable
     );
 }

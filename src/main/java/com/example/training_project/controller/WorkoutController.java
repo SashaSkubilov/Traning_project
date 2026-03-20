@@ -43,20 +43,20 @@ public class WorkoutController {
     @GetMapping("/search/jpql")
     public Page<WorkoutDto> searchJpql(
             @RequestParam(required = false) final String type,
-            @RequestParam(required = false) final Long coachId,
-            @RequestParam(required = false) final Long programId,
+            @RequestParam(required = false) final String coachName,
+            @RequestParam(required = false) final String programName,
             @PageableDefault(size = 20) final Pageable pageable
     ) {
-        return workoutService.searchWorkoutsJpql(type, coachId, programId, pageable);
+        return workoutService.searchWorkoutsJpql(type, coachName, programName, pageable);
     }
 
     @GetMapping("/search/native")
     public Page<WorkoutDto> searchNative(
-            @RequestParam(required = false) final Long coachId,
-            @RequestParam(required = false) final Long programId,
+            @RequestParam(required = false) final String coachName,
+            @RequestParam(required = false) final String programName,
             final Pageable pageable
     ) {
-        return workoutService.searchWorkoutsNative(coachId, programId, pageable);
+        return workoutService.searchWorkoutsNative(coachName, programName, pageable);
     }
 
     @GetMapping("/optimized")

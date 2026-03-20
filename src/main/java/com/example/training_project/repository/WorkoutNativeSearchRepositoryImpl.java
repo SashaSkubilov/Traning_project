@@ -31,8 +31,8 @@ public class WorkoutNativeSearchRepositoryImpl implements WorkoutNativeSearchRep
             join athletes a on w.athlete_id = a.id
             join coaches c on a.coach_id = c.id
             join programs p on w.program_id = p.id
-            where (:coachId is null or c.id = :coachId)
-              and (:programId is null or p.id = :programId)
+             where (:coachName is null or lower(concat(c.first_name, ' ', c.last_name)) = lower(:coachName))
+                and (:programName is null or lower(p.name) = lower(:programName))
             """;
 
     private static final String ORDER_BY_CLAUSE = buildOrderByClause();
@@ -45,11 +45,11 @@ public class WorkoutNativeSearchRepositoryImpl implements WorkoutNativeSearchRep
     private EntityManager entityManager;
 
     @Override
-    public Page<Workout> findByFiltersNative(final Long coachId,
-                                             final Long programId,
+    public Page<Workout> findByFiltersNative(final String coachName,
+                                             final String programName,
                                              final Pageable pageable) {
         Query query = entityManager.createNativeQuery(CONTENT_QUERY, Workout.class);
-        bindParameters(query, coachId, programId);
+        bindParameters(query, coachName, programName);
         bindSortParameters(query, pageable.getSort());
 
         if (pageable.isPaged()) {
@@ -61,17 +61,17 @@ public class WorkoutNativeSearchRepositoryImpl implements WorkoutNativeSearchRep
         List<Workout> content = query.getResultList();
 
         Query countQuery = entityManager.createNativeQuery(COUNT_QUERY);
-        bindParameters(countQuery, coachId, programId);
+        bindParameters(countQuery, coachName, programName);
         long total = ((Number) countQuery.getSingleResult()).longValue();
 
         return new PageImpl<>(content, pageable, total);
     }
 
     private void bindParameters(final Query query,
-                                final Long coachId,
-                                final Long programId) {
-        query.setParameter("coachId", coachId);
-        query.setParameter("programId", programId);
+                                final String coachName,
+                                final String programName) {
+        query.setParameter("coachName", coachName);
+        query.setParameter("programName", programName);
     }
 
     private void bindSortParameters(final Query query,
