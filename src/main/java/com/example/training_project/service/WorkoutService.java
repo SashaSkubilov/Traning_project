@@ -284,7 +284,7 @@ public class WorkoutService {
 
         private final String coachName;
 
-        private final Long prograName;
+        private final String programName;
 
         private final int pageNumber;
 
