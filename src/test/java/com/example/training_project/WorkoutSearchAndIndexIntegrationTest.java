@@ -63,12 +63,12 @@ class WorkoutSearchAndIndexIntegrationTest {
         String programName = trainingProgramRepository.findAll().get(0).getName();
         Pageable pageable = PageRequest.of(0, 1, Sort.by("title").ascending());
 
-        Page<WorkoutDto> result = workoutService.searchWorkoutsJpql("Leg Day", coachName, programName, pageable);
+        Page<WorkoutDto> result = workoutService.searchWorkoutsJpql(null, coachName, programName, pageable);
 
         assertThat(result.getContent()).hasSize(1);
         assertThat(result.getContent().get(0).title()).isEqualTo("Leg Day");
         assertThat(result.getTotalElements()).isEqualTo(1);
-        verify(workoutRepository, times(1)).findByFiltersJpql(coachName, programName, pageable);
+        verify(workoutRepository, times(1)).findByFiltersJpql(null, coachName, programName, pageable);
     }
 
     @Test

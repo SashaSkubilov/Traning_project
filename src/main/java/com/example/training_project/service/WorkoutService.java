@@ -95,7 +95,7 @@ public class WorkoutService {
 
         return getOrLoadFromIndex(
                 key,
-                () -> workoutRepository.findByFiltersJpql(coachName, programName, pageable)
+                () -> workoutRepository.findByFiltersJpql(type, coachName, programName, pageable)
                         .map(workoutMapper::toDto)
         );
     }
@@ -114,9 +114,32 @@ public class WorkoutService {
 
         return getOrLoadFromIndex(
                 key,
-                () -> workoutRepository.findByFiltersNative(coachName, programName, pageable)
+                () -> preloadWorkoutDetails(workoutRepository.findByFiltersNative(coachName, programName, pageable))
                         .map(workoutMapper::toDto)
         );
+    }
+
+    private Page<Workout> preloadWorkoutDetails(final Page<Workout> page) {
+        List<Long> workoutIds = page.getContent().stream()
+                .map(Workout::getId)
+                .toList();
+
+        if (workoutIds.isEmpty()) {
+            return page;
+        }
+
+        Map<Long, Workout> workoutsById = workoutRepository.findAllWithDetailsByIdIn(workoutIds).stream()
+                .collect(java.util.stream.Collectors.toMap(Workout::getId, workout -> workout));
+
+        List<Workout> hydratedContent = workoutIds.stream()
+                .map(workoutsById::get)
+                .filter(Objects::nonNull)
+                .toList();
+
+        return new org.springframework.data.domain.PageImpl<>(
+                hydratedContent,
+                page.getPageable(),
+                page.getTotalElements());
     }
 
     @Transactional(readOnly = true)
