@@ -29,9 +29,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.function.Supplier;
 
-/**
- * Service for managing workouts and demonstrating transactional behavior.
- */
+
 @Service
 public class WorkoutService {
 
@@ -49,9 +47,6 @@ public class WorkoutService {
 
     private final WorkoutMapper workoutMapper;
 
-    /**
-     * In-memory index for previously fetched workout pages.
-     */
     private final Map<WorkoutFilterKey, Page<WorkoutDto>> workoutIndex = new ConcurrentHashMap<>();
 
     public WorkoutService(
@@ -85,9 +80,6 @@ public class WorkoutService {
                 .toList();
     }
 
-    /**
-     * Complex search using JPQL-based repository query with pagination and in-memory index.
-     */
     @Transactional(readOnly = true)
     public Page<WorkoutDto> searchWorkoutsJpql(final String type,
                                                final Long coachId,
@@ -108,9 +100,6 @@ public class WorkoutService {
         );
     }
 
-    /**
-     * Complex search using native query with pagination and in-memory index.
-     */
     @Transactional(readOnly = true)
     public Page<WorkoutDto> searchWorkoutsNative(final Long coachId,
                                                  final Long programId,
@@ -282,9 +271,6 @@ public class WorkoutService {
         return loaded;
     }
 
-    /**
-     * Composite key for the in-memory workout index.
-     */
     private static final class WorkoutFilterKey {
 
         enum QueryType {

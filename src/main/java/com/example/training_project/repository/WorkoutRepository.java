@@ -10,9 +10,6 @@ import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 
-/**
- * Repository for Workout entities with N+1 problem solutions.
- */
 public interface WorkoutRepository extends JpaRepository<Workout, Long>, WorkoutNativeSearchRepository {
 
     @EntityGraph(attributePaths = {"athlete", "program", "exercises"})

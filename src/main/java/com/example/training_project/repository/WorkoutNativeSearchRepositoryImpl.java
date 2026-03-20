@@ -14,9 +14,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-/**
- * * Native PostgreSQL search implementation with safe sort mapping.
- */
 @Repository
 public class WorkoutNativeSearchRepositoryImpl implements WorkoutNativeSearchRepository {
 
