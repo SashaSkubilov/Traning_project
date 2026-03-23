@@ -207,3 +207,143 @@ docker compose up -d
 
 Приложение подключается к PostgreSQL через:
 - `jdbc:postgresql://localhost:5432/trainingdb`
+## Новые возможности
+
+### Глобальная обработка ошибок
+
+Во всех endpoint используется единый формат ошибки:
+
+```json
+{
+  "timestamp": "2026-03-23T12:00:00Z",
+  "status": 400,
+  "error": "Bad Request",
+  "message": "Validation failed",
+  "path": "/api/workouts",
+  "details": [
+    "title: title length must be between 2 and 150 characters"
+  ]
+}
+```
+
+Обработка ошибок вынесена в `@ControllerAdvice`, поэтому одинаковый JSON-ответ возвращается для:
+
+- `400 Bad Request` — ошибки валидации и некорректный запрос.
+- `404 Not Found` — сущность не найдена.
+- `409 Conflict` — попытка создать дубликат ресурса.
+- `500 Internal Server Error` — непредвиденная ошибка.
+
+### Валидация входных данных
+
+Для входных DTO подключён Bean Validation через `@Valid`:
+
+- обязательные поля (`@NotNull`, `@NotBlank`)
+- ограничения на длину (`@Size`)
+- ограничения на числа (`@Min`)
+- проверка даты тренировки (`@Future`)
+- проверка коллекций (`@NotEmpty`)
+
+### Swagger / OpenAPI
+
+После запуска приложения доступны:
+
+- Swagger UI: `http://localhost:8080/swagger-ui.html`
+- OpenAPI JSON: `http://localhost:8080/api-docs`
+
+В Swagger описаны endpoint и входные DTO.
+
+### Логирование через Logback
+
+Настроено:
+
+- уровни логирования:
+    - `ROOT=INFO`
+    - `com.example.training_project=DEBUG`
+    - `org.springframework.web=INFO`
+    - `org.hibernate.SQL=INFO`
+- запись логов в файл `logs/training-project.log`
+- ротация логов по времени и размеру:
+    - архив в `logs/archive/`
+    - ежедневная ротация
+    - новый файл при достижении `10MB`
+    - хранение истории `14` дней
+
+### AOP: логирование времени выполнения сервисов
+
+Для всех методов слоя `service` добавлен аспект, который пишет в лог время выполнения метода, например:
+
+```text
+Service method WorkoutService.createWorkout(..) executed in 8 ms
+```
+
+## Что показать на сдаче
+
+### 1. Показать ошибку 400
+
+Пример запроса с невалидными входными данными:
+
+```bash
+curl -X POST "http://localhost:8080/api/workouts" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "",
+    "type": "",
+    "durationMinutes": 0,
+    "scheduledAt": "2026-01-01T10:00:00",
+    "athleteId": null,
+    "programId": null,
+    "exerciseIds": []
+  }'
+```
+
+Что показать:
+
+- HTTP статус `400`
+- единый JSON ошибки
+- запись в логах `logs/training-project.log`
+
+### 2. Показать ошибку 409
+
+Сначала создать тренировку:
+
+```bash
+curl -X POST "http://localhost:8080/api/workouts" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "Conflict Demo",
+    "type": "Strength",
+    "durationMinutes": 45,
+    "scheduledAt": "2026-12-01T10:00:00",
+    "athleteId": 1,
+    "programId": 1,
+    "exerciseIds": [1]
+  }'
+```
+
+Потом повторить тот же запрос ещё раз.
+
+Что показать:
+
+- HTTP статус `409`
+- сообщение о конфликте/дубликате
+- запись в `logs/training-project.log`
+
+### 3. Показать логи
+
+Удобные команды:
+
+```bash
+tail -n 100 logs/training-project.log
+```
+
+или
+
+```bash
+grep "Request failed with status" logs/training-project.log
+```
+
+Нужно показать, что в логах есть:
+
+- ошибки `400`
+- ошибки `409`
+- время выполнения сервисных методов

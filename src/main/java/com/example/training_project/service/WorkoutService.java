@@ -7,6 +7,7 @@ import com.example.training_project.entity.Athlete;
 import com.example.training_project.entity.Exercise;
 import com.example.training_project.entity.TrainingProgram;
 import com.example.training_project.entity.Workout;
+import com.example.training_project.exception.DuplicateResourceException;
 import com.example.training_project.mapper.WorkoutMapper;
 import com.example.training_project.repository.AthleteRepository;
 import com.example.training_project.repository.CoachRepository;
@@ -17,19 +18,19 @@ import jakarta.persistence.EntityNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
-
 
 @Service
 public class WorkoutService {
@@ -76,7 +77,7 @@ public class WorkoutService {
     @Transactional(readOnly = true)
     public List<WorkoutDto> getWorkouts(final String type) {
         return workoutRepository.findAll().stream()
-                .filter(w -> type == null || type.equalsIgnoreCase(w.getType()))
+                .filter(workout -> type == null || type.equalsIgnoreCase(workout.getType()))
                 .map(workoutMapper::toDto)
                 .toList();
     }
@@ -119,7 +120,7 @@ public class WorkoutService {
         int start = Math.toIntExact(Math.min(pageable.getOffset(), filtered.size()));
         int end = Math.min(start + pageable.getPageSize(), filtered.size());
         List<WorkoutDto> pageContent = filtered.subList(start, end);
-        return new org.springframework.data.domain.PageImpl<>(pageContent, pageable, filtered.size());
+        return new PageImpl<>(pageContent, pageable, filtered.size());
     }
 
     @Transactional(readOnly = true)
@@ -156,6 +157,7 @@ public class WorkoutService {
 
     @Transactional
     public WorkoutDto createWorkout(final WorkoutCreateUpdateRequest request) {
+        validateWorkoutUniqueness(request, null);
         Workout workout = buildWorkoutEntity(new Workout(), request);
         WorkoutDto result = workoutMapper.toDto(workoutRepository.save(workout));
         invalidateWorkoutIndex();
@@ -164,7 +166,7 @@ public class WorkoutService {
 
     @Transactional
     public WorkoutDto updateWorkout(final Long id, final WorkoutCreateUpdateRequest request) {
-
+        validateWorkoutUniqueness(request, id);
         Workout workout = workoutRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Workout not found: " + id));
         buildWorkoutEntity(workout, request);
@@ -175,11 +177,11 @@ public class WorkoutService {
 
     @Transactional
     public WorkoutDto addWorkoutWithExercises(final WorkoutWithExercisesRequest request) {
+        validateWorkoutUniqueness(request.title(), request.scheduledAt(), null);
         WorkoutDto result = addWorkoutWithExercisesInternal(request, true);
         invalidateWorkoutIndex();
         return result;
     }
-
 
     @Transactional
     public void deleteWorkout(final Long id) {
@@ -207,8 +209,8 @@ public class WorkoutService {
 
     private Workout buildWorkoutWithExercisesEntity(final WorkoutWithExercisesRequest request) {
         Workout workout = new Workout();
-        workout.setTitle(request.title());
-        workout.setType(request.type());
+        workout.setTitle(request.title().trim());
+        workout.setType(request.type().trim());
         workout.setDurationMinutes(request.durationMinutes());
         workout.setScheduledAt(request.scheduledAt());
         workout.setAthlete(getAthleteById(request.athleteId()));
@@ -256,20 +258,36 @@ public class WorkoutService {
                 .orElseThrow(() -> new EntityNotFoundException("Program not found: " + request.programId()));
 
         Set<Exercise> exercises = new HashSet<>(exerciseRepository.findAllById(request.exerciseIds()));
+        if (exercises.size() != request.exerciseIds().size()) {
+            throw new EntityNotFoundException("One or more exercises were not found");
+        }
 
         workout.setTitle(request.title());
-        workout.setType(request.type());
-        workout.setDurationMinutes(request.durationMinutes());
+        workout.setTitle(request.title().trim());
+        workout.setType(request.type().trim());
         workout.setScheduledAt(request.scheduledAt());
         workout.setAthlete(athlete);
         workout.setProgram(program);
 
-        if (workout.getExercises() != null) {
-            workout.getExercises().clear();
-            workout.getExercises().addAll(exercises);
-        }
-
+        workout.getExercises().clear();
+        workout.getExercises().addAll(exercises);
         return workout;
+    }
+
+    private void validateWorkoutUniqueness(final WorkoutCreateUpdateRequest request, final Long currentId) {
+        validateWorkoutUniqueness(request.title(), request.scheduledAt(), currentId);
+    }
+
+    private void validateWorkoutUniqueness(final String title,
+                                           final java.time.LocalDateTime scheduledAt,
+                                           final Long currentId) {
+        boolean duplicate = currentId == null
+                ? workoutRepository.existsByTitleIgnoreCaseAndScheduledAt(title.trim(), scheduledAt)
+                : workoutRepository.existsByTitleIgnoreCaseAndScheduledAtAndIdNot(title.trim(), scheduledAt, currentId);
+        if (duplicate) {
+            throw new DuplicateResourceException("Workout already exists with title '"
+                    + title.trim() + "' at " + scheduledAt);
+        }
     }
 
     private void invalidateWorkoutIndex() {
@@ -334,7 +352,7 @@ public class WorkoutService {
                                          final String coachName,
                                          final String programName,
                                          final Pageable pageable) {
-            String sort = pageable.getSort().isUnsorted() ? "" : pageable.getSort().toString();
+            String normalizedSort = pageable.getSort().isUnsorted() ? "" : pageable.getSort().toString();
             return new WorkoutFilterKey(
                     queryType,
                     type,
@@ -342,19 +360,19 @@ public class WorkoutService {
                     programName,
                     pageable.getPageNumber(),
                     pageable.getPageSize(),
-                    sort
+                    normalizedSort
             );
         }
 
         @Override
-        public boolean equals(Object o) {
-            if (this == o) {
+        public boolean equals(final Object object) {
+            if (this == object) {
                 return true;
             }
-            if (o == null || getClass() != o.getClass()) {
+            if (object == null || getClass() != object.getClass()) {
                 return false;
             }
-            WorkoutFilterKey that = (WorkoutFilterKey) o;
+            WorkoutFilterKey that = (WorkoutFilterKey) object;
             return pageNumber == that.pageNumber
                     && pageSize == that.pageSize
                     && queryType == that.queryType

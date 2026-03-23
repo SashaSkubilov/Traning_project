@@ -16,4 +16,8 @@ public interface AthleteRepository extends JpaRepository<Athlete, Long> {
     @Override
     @EntityGraph(attributePaths = "coach")
     Optional<Athlete> findById(Long id);
+
+    boolean existsByFirstNameIgnoreCaseAndLastNameIgnoreCase(String firstName, String lastName);
+
+    boolean existsByFirstNameIgnoreCaseAndLastNameIgnoreCaseAndIdNot(String firstName, String lastName, Long id);
 }

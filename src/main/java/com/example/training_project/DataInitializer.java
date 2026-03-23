@@ -22,22 +22,30 @@ public class DataInitializer {
 
     @Bean
     CommandLineRunner initData(
-            CoachRepository coachRepository,
-            AthleteRepository athleteRepository,
-            TrainingProgramRepository trainingProgramRepository,
-            ExerciseRepository exerciseRepository,
-            WorkoutRepository workoutRepository
+            final CoachRepository coachRepository,
+            final AthleteRepository athleteRepository,
+            final TrainingProgramRepository trainingProgramRepository,
+            final ExerciseRepository exerciseRepository,
+            final WorkoutRepository workoutRepository
     ) {
         return args -> {
+            if (workoutRepository.count() > 0) {
+                return;
+            }
+
             Coach coach = coachRepository.save(new Coach("Ivan", "Petrov"));
             Athlete athlete = athleteRepository.save(new Athlete("Alex", "Smirnov", coach));
             TrainingProgram program = trainingProgramRepository.save(new TrainingProgram("Mass Gain"));
             Exercise squat = exerciseRepository.save(new Exercise("Squat"));
             Exercise bench = exerciseRepository.save(new Exercise("Bench Press"));
+
             Workout first = new Workout("Leg Day", 70, LocalDateTime.now().plusDays(1), athlete, program);
+            first.setType("Strength");
             first.getExercises().addAll(List.of(squat, bench));
             workoutRepository.save(first);
+
             Workout second = new Workout("Upper Day", 60, LocalDateTime.now().plusDays(2), athlete, program);
+            second.setType("Hypertrophy");
             second.getExercises().add(bench);
             workoutRepository.save(second);
         };

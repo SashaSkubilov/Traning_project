@@ -4,6 +4,7 @@ import com.example.training_project.dto.AthleteCreateUpdateRequest;
 import com.example.training_project.dto.AthleteDto;
 import com.example.training_project.entity.Athlete;
 import com.example.training_project.entity.Coach;
+import com.example.training_project.exception.DuplicateResourceException;
 import com.example.training_project.mapper.AthleteMapper;
 import com.example.training_project.repository.AthleteRepository;
 import com.example.training_project.repository.CoachRepository;
@@ -48,6 +49,7 @@ public class AthleteService {
 
     @Transactional
     public AthleteDto create(final AthleteCreateUpdateRequest request) {
+        validateAthleteUniqueness(request, null);
         Athlete athlete = new Athlete();
         applyRequestToEntity(athlete, request);
         return athleteMapper.toDto(athleteRepository.save(athlete));
@@ -58,14 +60,15 @@ public class AthleteService {
         Athlete existing = athleteRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Athlete not found: " + id));
 
+        validateAthleteUniqueness(request, id);
         applyRequestToEntity(existing, request);
 
         return athleteMapper.toDto(athleteRepository.save(existing));
     }
 
     private void applyRequestToEntity(final Athlete athlete, final AthleteCreateUpdateRequest request) {
-        athlete.setFirstName(request.firstName());
-        athlete.setLastName(request.lastName());
+        athlete.setFirstName(request.firstName().trim());
+        athlete.setLastName(request.lastName().trim());
 
         if (request.coachId() != null) {
             Coach coach = coachRepository.findById(request.coachId())
@@ -80,5 +83,21 @@ public class AthleteService {
     public void delete(final Long id) {
         athleteRepository.deleteById(id);
     }
-}
 
+    private void validateAthleteUniqueness(final AthleteCreateUpdateRequest request, final Long currentId) {
+        boolean duplicate = currentId == null
+                ? athleteRepository.existsByFirstNameIgnoreCaseAndLastNameIgnoreCase(
+                request.firstName().trim(),
+                request.lastName().trim()
+        )
+                : athleteRepository.existsByFirstNameIgnoreCaseAndLastNameIgnoreCaseAndIdNot(
+                request.firstName().trim(),
+                request.lastName().trim(),
+                currentId
+        );
+        if (duplicate) {
+            throw new DuplicateResourceException("Athlete already exists with name: "
+                    + request.firstName().trim() + " " + request.lastName().trim());
+        }
+    }
+}

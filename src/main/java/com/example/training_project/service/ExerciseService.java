@@ -3,6 +3,7 @@ package com.example.training_project.service;
 import com.example.training_project.dto.ExerciseCreateUpdateRequest;
 import com.example.training_project.dto.ExerciseDto;
 import com.example.training_project.entity.Exercise;
+import com.example.training_project.exception.DuplicateResourceException;
 import com.example.training_project.mapper.ExerciseMapper;
 import com.example.training_project.repository.ExerciseRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -39,8 +40,13 @@ public class ExerciseService {
 
     @Transactional
     public ExerciseDto create(final ExerciseCreateUpdateRequest request) {
+        String normalizedName = request.name().trim();
+        if (exerciseRepository.existsByNameIgnoreCase(normalizedName)) {
+            throw new DuplicateResourceException("Exercise already exists with name: " + normalizedName);
+        }
+
         Exercise exercise = new Exercise();
-        exercise.setName(request.name());
+        exercise.setName(normalizedName);
         return exerciseMapper.toDto(exerciseRepository.save(exercise));
     }
 
@@ -49,7 +55,12 @@ public class ExerciseService {
         Exercise existing = exerciseRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Exercise not found: " + id));
 
-        existing.setName(request.name());
+        String normalizedName = request.name().trim();
+        if (exerciseRepository.existsByNameIgnoreCaseAndIdNot(normalizedName, id)) {
+            throw new DuplicateResourceException("Exercise already exists with name: " + normalizedName);
+        }
+
+        existing.setName(normalizedName);
 
         return exerciseMapper.toDto(exerciseRepository.save(existing));
     }
@@ -59,4 +70,3 @@ public class ExerciseService {
         exerciseRepository.deleteById(id);
     }
 }
-

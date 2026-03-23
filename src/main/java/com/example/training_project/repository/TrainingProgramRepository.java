@@ -16,4 +16,8 @@ public interface TrainingProgramRepository extends JpaRepository<TrainingProgram
     @Override
     @EntityGraph(attributePaths = "workouts")
     Optional<TrainingProgram> findById(Long id);
+
+    boolean existsByNameIgnoreCase(String name);
+
+    boolean existsByNameIgnoreCaseAndIdNot(String name, Long id);
 }

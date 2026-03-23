@@ -4,6 +4,10 @@ import com.example.training_project.dto.WorkoutCreateUpdateRequest;
 import com.example.training_project.dto.WorkoutDto;
 import com.example.training_project.dto.WorkoutWithExercisesRequest;
 import com.example.training_project.service.WorkoutService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
@@ -27,6 +31,7 @@ import java.util.List;
  */
 @RestController
 @RequestMapping("/api/workouts")
+@Tag(name = "Workouts", description = "CRUD, поиск и транзакционные сценарии для тренировок")
 public class WorkoutController {
 
     private final WorkoutService workoutService;
@@ -36,11 +41,16 @@ public class WorkoutController {
     }
 
     @GetMapping
-    public List<WorkoutDto> getAll(@RequestParam(required = false) final String type) {
+    @Operation(summary = "Получить список тренировок")
+    public List<WorkoutDto> getAll(
+            @Parameter(description = "Фильтр по типу тренировки")
+            @RequestParam(required = false) final String type
+    ) {
         return workoutService.getWorkouts(type);
     }
 
     @GetMapping("/search/jpql")
+    @Operation(summary = "Поиск тренировок через JPQL")
     public Page<WorkoutDto> searchJpql(
             @RequestParam(required = false) final String type,
             @RequestParam(required = false) final String coachName,
@@ -51,6 +61,7 @@ public class WorkoutController {
     }
 
     @GetMapping("/search/native")
+    @Operation(summary = "Поиск тренировок через native query")
     public Page<WorkoutDto> searchNative(
             @RequestParam(required = false) final String coachName,
             @RequestParam(required = false) final String programName,
@@ -60,41 +71,48 @@ public class WorkoutController {
     }
 
     @GetMapping("/optimized")
+    @Operation(summary = "Поиск тренировок через native query")
     public List<WorkoutDto> getAllOptimized() {
         return workoutService.getAllWorkoutsOptimized();
     }
 
     @GetMapping("/{id}")
+    @Operation(summary = "Получить тренировку по id")
     public WorkoutDto getById(@PathVariable final Long id) {
         return workoutService.getWorkoutById(id);
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public WorkoutDto create(@RequestBody final WorkoutCreateUpdateRequest request) {
+    @Operation(summary = "Создать тренировку")
+    public WorkoutDto create(@Valid @RequestBody final WorkoutCreateUpdateRequest request) {
         return workoutService.createWorkout(request);
     }
 
     @PutMapping("/{id}")
+    @Operation(summary = "Обновить тренировку")
     public WorkoutDto update(@PathVariable final Long id,
-                             @RequestBody final WorkoutCreateUpdateRequest request) {
+                             @Valid @RequestBody final WorkoutCreateUpdateRequest request) {
         return workoutService.updateWorkout(id, request);
     }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @Operation(summary = "Удалить тренировку")
     public void delete(@PathVariable final Long id) {
         workoutService.deleteWorkout(id);
     }
 
     @GetMapping("/persisted_counts")
+    @Operation(summary = "Получить количество записей в основных таблицах")
     public String getPersistedCounts() {
         return workoutService.getPersistedCounts();
     }
 
     @PostMapping("/with_exercises")
+    @Operation(summary = "Создать тренировку вместе с новыми упражнениями")
     public ResponseEntity<WorkoutDto> addWorkoutWithExercises(
-            @RequestBody final WorkoutWithExercisesRequest request
+            @Valid @RequestBody final WorkoutWithExercisesRequest request
     ) {
         WorkoutDto created = workoutService.addWorkoutWithExercises(request);
         return new ResponseEntity<>(created, HttpStatus.CREATED);

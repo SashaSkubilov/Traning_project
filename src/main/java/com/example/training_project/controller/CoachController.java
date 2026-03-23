@@ -3,6 +3,9 @@ package com.example.training_project.controller;
 import com.example.training_project.dto.CoachCreateUpdateRequest;
 import com.example.training_project.dto.CoachDto;
 import com.example.training_project.service.CoachService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -18,6 +21,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/coaches")
+@Tag(name = "Coaches", description = "CRUD операции для тренеров")
 public class CoachController {
 
     private final CoachService coachService;
@@ -27,29 +31,34 @@ public class CoachController {
     }
 
     @GetMapping
+    @Operation(summary = "Получить всех тренеров")
     public List<CoachDto> getAll() {
         return coachService.getAll();
     }
 
     @GetMapping("/{id}")
+    @Operation(summary = "Получить тренера по id")
     public CoachDto getById(@PathVariable final Long id) {
         return coachService.getById(id);
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public CoachDto create(@RequestBody final CoachCreateUpdateRequest request) {
+    @Operation(summary = "Создать тренера")
+    public CoachDto create(@Valid @RequestBody final CoachCreateUpdateRequest request) {
         return coachService.create(request);
     }
 
     @PutMapping("/{id}")
+    @Operation(summary = "Обновить тренера")
     public CoachDto update(@PathVariable final Long id,
-                           @RequestBody final CoachCreateUpdateRequest request) {
+                           @Valid @RequestBody final CoachCreateUpdateRequest request) {
         return coachService.update(id, request);
     }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @Operation(summary = "Удалить тренера")
     public void delete(@PathVariable final Long id) {
         coachService.delete(id);
     }

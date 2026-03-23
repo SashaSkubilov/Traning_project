@@ -3,6 +3,7 @@ package com.example.training_project.service;
 import com.example.training_project.dto.CoachCreateUpdateRequest;
 import com.example.training_project.dto.CoachDto;
 import com.example.training_project.entity.Coach;
+import com.example.training_project.exception.DuplicateResourceException;
 import com.example.training_project.mapper.CoachMapper;
 import com.example.training_project.repository.CoachRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -39,9 +40,10 @@ public class CoachService {
 
     @Transactional
     public CoachDto create(final CoachCreateUpdateRequest request) {
+        validateCoachUniqueness(request, null);
         Coach coach = new Coach();
-        coach.setFirstName(request.firstName());
-        coach.setLastName(request.lastName());
+        coach.setFirstName(request.firstName().trim());
+        coach.setLastName(request.lastName().trim());
         return coachMapper.toDto(coachRepository.save(coach));
     }
 
@@ -50,8 +52,9 @@ public class CoachService {
         Coach existing = coachRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Coach not found: " + id));
 
-        existing.setFirstName(request.firstName());
-        existing.setLastName(request.lastName());
+        validateCoachUniqueness(request, id);
+        existing.setFirstName(request.firstName().trim());
+        existing.setLastName(request.lastName().trim());
 
         return coachMapper.toDto(coachRepository.save(existing));
     }
@@ -59,6 +62,23 @@ public class CoachService {
     @Transactional
     public void delete(final Long id) {
         coachRepository.deleteById(id);
+    }
+
+    private void validateCoachUniqueness(final CoachCreateUpdateRequest request, final Long currentId) {
+        boolean duplicate = currentId == null
+                ? coachRepository.existsByFirstNameIgnoreCaseAndLastNameIgnoreCase(
+                request.firstName().trim(),
+                request.lastName().trim()
+        )
+                : coachRepository.existsByFirstNameIgnoreCaseAndLastNameIgnoreCaseAndIdNot(
+                request.firstName().trim(),
+                request.lastName().trim(),
+                currentId
+        );
+        if (duplicate) {
+            throw new DuplicateResourceException("Coach already exists with name: "
+                    + request.firstName().trim() + " " + request.lastName().trim());
+        }
     }
 }
 

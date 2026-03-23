@@ -3,6 +3,7 @@ package com.example.training_project.service;
 import com.example.training_project.dto.TrainingProgramCreateUpdateRequest;
 import com.example.training_project.dto.TrainingProgramDto;
 import com.example.training_project.entity.TrainingProgram;
+import com.example.training_project.exception.DuplicateResourceException;
 import com.example.training_project.mapper.TrainingProgramMapper;
 import com.example.training_project.repository.TrainingProgramRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -42,8 +43,13 @@ public class TrainingProgramService {
 
     @Transactional
     public TrainingProgramDto create(final TrainingProgramCreateUpdateRequest request) {
+        String normalizedName = request.name().trim();
+        if (trainingProgramRepository.existsByNameIgnoreCase(normalizedName)) {
+            throw new DuplicateResourceException("Program already exists with name: " + normalizedName);
+        }
+
         TrainingProgram program = new TrainingProgram();
-        program.setName(request.name());
+        program.setName(normalizedName);
         return trainingProgramMapper.toDto(trainingProgramRepository.save(program));
     }
 
@@ -52,7 +58,12 @@ public class TrainingProgramService {
         TrainingProgram existing = trainingProgramRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Program not found: " + id));
 
-        existing.setName(request.name());
+        String normalizedName = request.name().trim();
+        if (trainingProgramRepository.existsByNameIgnoreCaseAndIdNot(normalizedName, id)) {
+            throw new DuplicateResourceException("Program already exists with name: " + normalizedName);
+        }
+
+        existing.setName(normalizedName);
 
         return trainingProgramMapper.toDto(trainingProgramRepository.save(existing));
     }
@@ -62,4 +73,3 @@ public class TrainingProgramService {
         trainingProgramRepository.deleteById(id);
     }
 }
-

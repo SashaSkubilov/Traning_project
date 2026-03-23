@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -20,6 +21,10 @@ public interface WorkoutRepository extends JpaRepository<Workout, Long>, Workout
     @Override
     @EntityGraph(attributePaths = {"athlete", "program", "exercises"})
     Optional<Workout> findById(Long id);
+
+    boolean existsByTitleIgnoreCaseAndScheduledAt(String title, LocalDateTime scheduledAt);
+
+    boolean existsByTitleIgnoreCaseAndScheduledAtAndIdNot(String title, LocalDateTime scheduledAt, Long id);
 
     @EntityGraph(attributePaths = {"athlete", "program", "exercises"})
     @Query("select distinct w from Workout w")
