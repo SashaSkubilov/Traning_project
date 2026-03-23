@@ -276,9 +276,7 @@ docker compose up -d
 Service method WorkoutService.createWorkout(..) executed in 8 ms
 ```
 
-## Что показать на сдаче
-
-### 1. Показать ошибку 400
+### 1. ошибка 400
 
 Пример запроса с невалидными входными данными:
 
@@ -296,13 +294,7 @@ curl -X POST "http://localhost:8080/api/workouts" \
   }'
 ```
 
-Что показать:
-
-- HTTP статус `400`
-- единый JSON ошибки
-- запись в логах `logs/training-project.log`
-
-### 2. Показать ошибку 409
+### 2. ошибка 409
 
 Сначала создать тренировку:
 
@@ -322,28 +314,3 @@ curl -X POST "http://localhost:8080/api/workouts" \
 
 Потом повторить тот же запрос ещё раз.
 
-Что показать:
-
-- HTTP статус `409`
-- сообщение о конфликте/дубликате
-- запись в `logs/training-project.log`
-
-### 3. Показать логи
-
-Удобные команды:
-
-```bash
-tail -n 100 logs/training-project.log
-```
-
-или
-
-```bash
-grep "Request failed with status" logs/training-project.log
-```
-
-Нужно показать, что в логах есть:
-
-- ошибки `400`
-- ошибки `409`
-- время выполнения сервисных методов
