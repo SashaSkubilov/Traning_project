@@ -40,8 +40,12 @@ public class GlobalExceptionHandler {
         return buildResponse(HttpStatus.BAD_REQUEST, "Validation failed", details, request, exception);
     }
 
-    @ExceptionHandler({IllegalArgumentException.class, MethodArgumentTypeMismatchException.class,
-            HttpMessageNotReadableException.class})
+    @ExceptionHandler({
+        IllegalArgumentException.class,
+        MethodArgumentTypeMismatchException.class,
+        HttpMessageNotReadableException.class
+    })
+
     public ResponseEntity<ApiErrorResponse> handleBadRequest(
             final Exception exception,
             final HttpServletRequest request

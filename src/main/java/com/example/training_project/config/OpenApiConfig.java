@@ -15,7 +15,10 @@ public class OpenApiConfig {
         return new OpenAPI()
                 .info(new Info()
                         .title("Training Project API")
-                        .description("REST API для управления тренировками, спортсменами, тренерами, программами и упражнениями")
+                        .description(
+                                "REST API для управления тренировками, спортсменами, "
+                                        + "тренерами, программами и упражнениями"
+                        )
                         .version("v1")
                         .contact(new Contact().name("Training Project"))
                         .license(new License().name("Demo API")));
