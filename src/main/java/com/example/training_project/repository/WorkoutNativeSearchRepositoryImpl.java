@@ -1,6 +1,6 @@
 package com.example.training_project.repository;
 
-import com.example.training_project.entity.Workout;
+import com.example.training_project.dto.WorkoutDto;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.Query;
@@ -31,24 +31,45 @@ public class WorkoutNativeSearchRepositoryImpl implements WorkoutNativeSearchRep
             join athletes a on w.athlete_id = a.id
             join coaches c on a.coach_id = c.id
             join programs p on w.program_id = p.id
-             where (:coachName is null or lower(concat(c.first_name, ' ', c.last_name)) = lower(:coachName))
+            left join workout_exercises we on w.id = we.workout_id
+            where (:coachName is null or lower(concat(c.first_name, ' ', c.last_name)) = lower(:coachName))
                 and (:programName is null or lower(p.name) = lower(:programName))
             """;
 
     private static final String ORDER_BY_CLAUSE = buildOrderByClause();
 
-    private static final String CONTENT_QUERY = "select w.*\n" + FROM_CLAUSE + ORDER_BY_CLAUSE;
+    private static final String CONTENT_QUERY = """
+            select
+                w.id,
+                w.title,
+                w.type,
+                w.duration_minutes,
+                w.scheduled_at,
+                concat(a.first_name, ' ', a.last_name) as athlete_name,
+                p.name as program_name,
+                count(distinct we.exercise_id) as exercises_count
+            """ + FROM_CLAUSE + """
+            group by w.id, w.title, w.type, w.duration_minutes, w.scheduled_at, a.first_name, a.last_name, p.name
+            """ + ORDER_BY_CLAUSE;
 
-    private static final String COUNT_QUERY = "select count(*)\n" + FROM_CLAUSE;
+    private static final String COUNT_QUERY = """
+            select count(distinct w.id)
+            from workouts w
+            join athletes a on w.athlete_id = a.id
+            join coaches c on a.coach_id = c.id
+            join programs p on w.program_id = p.id
+            where (:coachName is null or lower(concat(c.first_name, ' ', c.last_name)) = lower(:coachName))
+              and (:programName is null or lower(p.name) = lower(:programName))
+            """;
 
     @PersistenceContext
     private EntityManager entityManager;
 
     @Override
-    public Page<Workout> findByFiltersNative(final String coachName,
+    public Page<WorkoutDto> findByFiltersNative(final String coachName,
                                              final String programName,
                                              final Pageable pageable) {
-        Query query = entityManager.createNativeQuery(CONTENT_QUERY, Workout.class);
+        Query query = entityManager.createNativeQuery(CONTENT_QUERY);
         bindParameters(query, coachName, programName);
         bindSortParameters(query, pageable.getSort());
 
@@ -58,13 +79,29 @@ public class WorkoutNativeSearchRepositoryImpl implements WorkoutNativeSearchRep
         }
 
         @SuppressWarnings("unchecked")
-        List<Workout> content = query.getResultList();
+        List<Object[]> rows = query.getResultList();
+        List<WorkoutDto> content = rows.stream()
+                .map(this::mapRowToWorkoutDto)
+                .toList();
 
         Query countQuery = entityManager.createNativeQuery(COUNT_QUERY);
         bindParameters(countQuery, coachName, programName);
         long total = ((Number) countQuery.getSingleResult()).longValue();
 
         return new PageImpl<>(content, pageable, total);
+    }
+
+    private WorkoutDto mapRowToWorkoutDto(final Object[] row) {
+        return new WorkoutDto(
+                ((Number) row[0]).longValue(),
+                (String) row[1],
+                (String) row[2],
+                row[3] != null ? ((Number) row[3]).intValue() : null,
+                row[4] != null ? ((java.sql.Timestamp) row[4]).toLocalDateTime() : null,
+                (String) row[5],
+                (String) row[6],
+                row[7] != null ? ((Number) row[7]).intValue() : 0
+        );
     }
 
     private void bindParameters(final Query query,
