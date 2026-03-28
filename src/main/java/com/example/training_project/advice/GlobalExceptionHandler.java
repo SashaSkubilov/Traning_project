@@ -100,6 +100,8 @@ public class GlobalExceptionHandler {
         if (status.is5xxServerError()) {
             LOG.error("Request failed with status {} on {}: {}", status.value(), request.getRequestURI(), message,
                     exception);
+        } else if (status == HttpStatus.BAD_REQUEST) {
+            LOG.warn("Request failed with status {} on {}: {}", status.value(), request.getRequestURI(), message);
         } else {
             LOG.warn("Request failed with status {} on {}: {} | details={}", status.value(), request.getRequestURI(),
                     message, details, exception);
