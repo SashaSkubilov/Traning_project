@@ -28,6 +28,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
@@ -184,6 +185,27 @@ public class WorkoutService {
     }
 
     @Transactional
+    public List<WorkoutDto> addWorkoutsWithExercisesBulkTransactional(final List<WorkoutWithExercisesRequest> requests) {
+        List<WorkoutWithExercisesRequest> normalizedRequests = normalizeBulkRequests(requests);
+        List<WorkoutDto> created = normalizedRequests.stream()
+                .peek(request -> validateWorkoutUniqueness(request.title(), request.scheduledAt(), null))
+                .map(request -> addWorkoutWithExercisesInternal(request, true))
+                .toList();
+        invalidateWorkoutIndex();
+        return created;
+    }
+
+    public List<WorkoutDto> addWorkoutsWithExercisesBulkNonTransactional(final List<WorkoutWithExercisesRequest> requests) {
+        List<WorkoutWithExercisesRequest> normalizedRequests = normalizeBulkRequests(requests);
+        List<WorkoutDto> created = normalizedRequests.stream()
+                .peek(request -> validateWorkoutUniqueness(request.title(), request.scheduledAt(), null))
+                .map(request -> addWorkoutWithExercisesInternal(request, true))
+                .toList();
+        invalidateWorkoutIndex();
+        return created;
+    }
+
+    @Transactional
     public void deleteWorkout(final Long id) {
         workoutRepository.deleteById(id);
         invalidateWorkoutIndex();
@@ -239,6 +261,39 @@ public class WorkoutService {
                 .map(Exercise::new)
                 .map(exerciseRepository::save)
                 .toList();
+    }
+
+    private List<WorkoutWithExercisesRequest> normalizeBulkRequests(final List<WorkoutWithExercisesRequest> requests) {
+        List<WorkoutWithExercisesRequest> safeRequests = Optional.ofNullable(requests)
+                .filter(list -> !list.isEmpty())
+                .orElseThrow(() -> new IllegalArgumentException("Bulk request must contain at least one workout"));
+
+        return safeRequests.stream()
+                .map(this::normalizeWorkoutWithExercisesRequest)
+                .toList();
+    }
+
+    private WorkoutWithExercisesRequest normalizeWorkoutWithExercisesRequest(final WorkoutWithExercisesRequest request) {
+        if (request == null) {
+            throw new IllegalArgumentException("Bulk request must not contain null workout payloads");
+        }
+        List<String> normalizedExerciseNames = Optional.ofNullable(request.exerciseNames())
+                .orElse(List.of())
+                .stream()
+                .filter(Objects::nonNull)
+                .map(String::trim)
+                .filter(name -> !name.isEmpty())
+                .toList();
+
+        return new WorkoutWithExercisesRequest(
+                request.title().trim(),
+                request.type().trim(),
+                request.durationMinutes(),
+                request.scheduledAt(),
+                request.athleteId(),
+                request.programId(),
+                normalizedExerciseNames
+        );
     }
 
     private Athlete getAthleteById(final Long athleteId) {

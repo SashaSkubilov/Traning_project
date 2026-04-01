@@ -117,4 +117,22 @@ public class WorkoutController {
         WorkoutDto created = workoutService.addWorkoutWithExercises(request);
         return new ResponseEntity<>(created, HttpStatus.CREATED);
     }
+
+    @PostMapping("/with_exercises/bulk/transactional")
+    @ResponseStatus(HttpStatus.CREATED)
+    @Operation(summary = "Массово создать тренировки и упражнения (в одной транзакции)")
+    public List<WorkoutDto> addWorkoutsWithExercisesBulkTransactional(
+            @RequestBody final List<@Valid WorkoutWithExercisesRequest> requests
+    ) {
+        return workoutService.addWorkoutsWithExercisesBulkTransactional(requests);
+    }
+
+    @PostMapping("/with_exercises/bulk/non_transactional")
+    @ResponseStatus(HttpStatus.CREATED)
+    @Operation(summary = "Массово создать тренировки и упражнения (без общей транзакции)")
+    public List<WorkoutDto> addWorkoutsWithExercisesBulkNonTransactional(
+            @RequestBody final List<@Valid WorkoutWithExercisesRequest> requests
+    ) {
+        return workoutService.addWorkoutsWithExercisesBulkNonTransactional(requests);
+    }
 }
