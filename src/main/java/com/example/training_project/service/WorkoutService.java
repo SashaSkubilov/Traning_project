@@ -185,7 +185,8 @@ public class WorkoutService {
     }
 
     @Transactional
-    public List<WorkoutDto> addWorkoutsWithExercisesBulkTransactional(final List<WorkoutWithExercisesRequest> requests) {
+    public List<WorkoutDto> addWorkoutsWithExercisesBulkTransactional(
+            final List<WorkoutWithExercisesRequest> requests) {
         List<WorkoutWithExercisesRequest> normalizedRequests = normalizeBulkRequests(requests);
         List<WorkoutDto> created = normalizedRequests.stream()
                 .peek(request -> validateWorkoutUniqueness(request.title(), request.scheduledAt(), null))
@@ -195,7 +196,8 @@ public class WorkoutService {
         return created;
     }
 
-    public List<WorkoutDto> addWorkoutsWithExercisesBulkNonTransactional(final List<WorkoutWithExercisesRequest> requests) {
+    public List<WorkoutDto> addWorkoutsWithExercisesBulkNonTransactional(
+            final List<WorkoutWithExercisesRequest> requests) {
         List<WorkoutWithExercisesRequest> normalizedRequests = normalizeBulkRequests(requests);
         List<WorkoutDto> created = normalizedRequests.stream()
                 .peek(request -> validateWorkoutUniqueness(request.title(), request.scheduledAt(), null))
@@ -273,7 +275,8 @@ public class WorkoutService {
                 .toList();
     }
 
-    private WorkoutWithExercisesRequest normalizeWorkoutWithExercisesRequest(final WorkoutWithExercisesRequest request) {
+    private WorkoutWithExercisesRequest normalizeWorkoutWithExercisesRequest(
+            final WorkoutWithExercisesRequest request) {
         if (request == null) {
             throw new IllegalArgumentException("Bulk request must not contain null workout payloads");
         }

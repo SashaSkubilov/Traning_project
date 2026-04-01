@@ -20,6 +20,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -31,6 +32,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 @SpringBootTest
+@Transactional
 class WorkoutSearchAndIndexIntegrationTest {
 
     @Autowired
@@ -67,7 +69,7 @@ class WorkoutSearchAndIndexIntegrationTest {
 
         assertThat(result.getContent()).hasSize(1);
         assertThat(result.getContent().get(0).title()).isEqualTo("Leg Day");
-        assertThat(result.getTotalElements()).isEqualTo(1);
+        assertThat(result.getTotalElements()).isEqualTo(2);
         verify(workoutRepository, times(1)).findByFiltersJpql(null, coachName, programName, pageable);
     }
 
@@ -114,8 +116,10 @@ class WorkoutSearchAndIndexIntegrationTest {
 
         Page<WorkoutDto> result = workoutService.searchWorkoutsNative(coachName, programName, pageable);
 
-        assertThat(result.getContent()).hasSize(1);
-        assertThat(result.getContent().get(0).title()).isEqualTo("Leg Day");
+        assertThat(result.getContent()).hasSize(2);
+        assertThat(result.getContent())
+                .extracting(WorkoutDto::title)
+                .containsExactly("Leg Day", "Upper Day");
         verify(workoutRepository, times(1)).findByFiltersNative(coachName, programName, pageable);
     }
 

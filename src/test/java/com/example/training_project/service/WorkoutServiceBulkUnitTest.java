@@ -53,29 +53,12 @@ class WorkoutServiceBulkUnitTest {
 
     @BeforeEach
     void setUp() {
-        when(workoutRepository.existsByTitleIgnoreCaseAndScheduledAt(anyString(), any())).thenReturn(false);
-        when(athleteRepository.findById(any())).thenReturn(Optional.of(new Athlete()));
-        when(trainingProgramRepository.findById(any())).thenReturn(Optional.of(new TrainingProgram("Program")));
 
-        when(exerciseRepository.save(any(Exercise.class))).thenAnswer(invocation -> invocation.getArgument(0));
-        when(workoutRepository.save(any(Workout.class))).thenAnswer(invocation -> invocation.getArgument(0));
-        when(workoutMapper.toDto(any(Workout.class))).thenAnswer(invocation -> {
-            Workout workout = invocation.getArgument(0);
-            return new WorkoutDto(
-                    1L,
-                    workout.getTitle(),
-                    workout.getType(),
-                    workout.getDurationMinutes(),
-                    workout.getScheduledAt(),
-                    "Athlete",
-                    "Program",
-                    workout.getExercises().size()
-            );
-        });
     }
 
     @Test
     void shouldCreateAllWorkoutsInTransactionalBulk() {
+        stubHappyPathPersistence();
         List<WorkoutWithExercisesRequest> requests = List.of(
                 request(" Upper A ", " Strength ", List.of(" Squat ")),
                 request(" Upper B ", " Cardio ", List.of(" Row "))
@@ -97,6 +80,7 @@ class WorkoutServiceBulkUnitTest {
 
     @Test
     void shouldDemonstrateNonTransactionalBehaviorOnFailure() {
+        stubHappyPathPersistence();
         List<WorkoutWithExercisesRequest> requests = List.of(
                 request("Bulk ok", "Strength", List.of("Deadlift")),
                 request("FAIL", "Strength", List.of("Bench Press"))
@@ -112,6 +96,7 @@ class WorkoutServiceBulkUnitTest {
 
     @Test
     void shouldNormalizeExerciseNamesInBulkRequest() {
+        stubHappyPathPersistence();
         List<WorkoutWithExercisesRequest> requests = List.of(
                 request("Bulk normalized", "Strength", List.of("  Pull Up  ", " ", "  Push Up  "))
         );
@@ -136,5 +121,26 @@ class WorkoutServiceBulkUnitTest {
                 1L,
                 exerciseNames
         );
+    }
+
+    private void stubHappyPathPersistence() {
+        when(workoutRepository.existsByTitleIgnoreCaseAndScheduledAt(anyString(), any())).thenReturn(false);
+        when(athleteRepository.findById(any())).thenReturn(Optional.of(new Athlete()));
+        when(trainingProgramRepository.findById(any())).thenReturn(Optional.of(new TrainingProgram("Program")));
+        when(exerciseRepository.save(any(Exercise.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(workoutRepository.save(any(Workout.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(workoutMapper.toDto(any(Workout.class))).thenAnswer(invocation -> {
+            Workout workout = invocation.getArgument(0);
+            return new WorkoutDto(
+                    1L,
+                    workout.getTitle(),
+                    workout.getType(),
+                    workout.getDurationMinutes(),
+                    workout.getScheduledAt(),
+                    "Athlete",
+                    "Program",
+                    workout.getExercises().size()
+            );
+        });
     }
 }
