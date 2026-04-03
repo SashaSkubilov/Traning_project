@@ -24,6 +24,8 @@ import org.mockito.quality.Strictness;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 
+import java.lang.reflect.Method;
+import java.util.Arrays;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -99,6 +101,47 @@ class WorkoutServiceEdgeCaseUnitTest {
         when(trainingProgramRepository.findById(2L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> workoutService.createWorkout(request)).isInstanceOf(EntityNotFoundException.class);
+    }
+
+    @Test
+    void shouldThrowWhenAthleteMissingDuringAddWorkoutWithExercises() {
+        WorkoutWithExercisesRequest request = new WorkoutWithExercisesRequest(
+                "Title",
+                "Type",
+                30,
+                LocalDateTime.now().plusDays(1),
+                11L,
+                22L,
+                List.of("Row")
+        );
+
+        when(workoutRepository.existsByTitleIgnoreCaseAndScheduledAt(anyString(), any())).thenReturn(false);
+        when(athleteRepository.findById(11L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> workoutService.addWorkoutWithExercises(request))
+                .isInstanceOf(EntityNotFoundException.class)
+                .hasMessage("Athlete not found: 11");
+    }
+
+    @Test
+    void shouldThrowWhenProgramMissingDuringAddWorkoutWithExercises() {
+        WorkoutWithExercisesRequest request = new WorkoutWithExercisesRequest(
+                "Title",
+                "Type",
+                30,
+                LocalDateTime.now().plusDays(1),
+                11L,
+                22L,
+                List.of("Row")
+        );
+
+        when(workoutRepository.existsByTitleIgnoreCaseAndScheduledAt(anyString(), any())).thenReturn(false);
+        when(athleteRepository.findById(11L)).thenReturn(Optional.of(new Athlete()));
+        when(trainingProgramRepository.findById(22L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> workoutService.addWorkoutWithExercises(request))
+                .isInstanceOf(EntityNotFoundException.class)
+                .hasMessage("Program not found: 22");
     }
 
     @Test
@@ -191,5 +234,101 @@ class WorkoutServiceEdgeCaseUnitTest {
 
         assertThat(created).hasSize(1);
         verify(exerciseRepository).save(any(Exercise.class));
+    }
+
+    @Test
+    void shouldBypassSimulatedFailureWhenInternalFlagIsFalse() throws Exception {
+        WorkoutWithExercisesRequest failTitleRequest = new WorkoutWithExercisesRequest(
+                "FAIL",
+                "Type",
+                35,
+                LocalDateTime.now().plusDays(1),
+                1L,
+                1L,
+                List.of("Row")
+        );
+
+        when(athleteRepository.findById(1L)).thenReturn(Optional.of(new Athlete()));
+        when(trainingProgramRepository.findById(1L)).thenReturn(Optional.of(new TrainingProgram("Mass")));
+        when(exerciseRepository.save(any(Exercise.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(workoutRepository.save(any(Workout.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        Method method = WorkoutService.class.getDeclaredMethod(
+                "addWorkoutWithExercisesInternal",
+                WorkoutWithExercisesRequest.class,
+                boolean.class
+        );
+        method.setAccessible(true);
+
+        WorkoutDto dto = (WorkoutDto) method.invoke(workoutService, failTitleRequest, false);
+
+        assertThat(dto.title()).isEqualTo("FAIL");
+    }
+
+    @Test
+    void shouldFilterNullAndBlankExercisesInDirectAddRequest() {
+        WorkoutWithExercisesRequest request = new WorkoutWithExercisesRequest(
+                "Mixed exercises",
+                "Type",
+                30,
+                LocalDateTime.now().plusDays(1),
+                1L,
+                1L,
+                Arrays.asList("  Row  ", null, " ", "\t")
+        );
+
+        when(workoutRepository.existsByTitleIgnoreCaseAndScheduledAt(anyString(), any())).thenReturn(false);
+        when(athleteRepository.findById(1L)).thenReturn(Optional.of(new Athlete()));
+        when(trainingProgramRepository.findById(1L)).thenReturn(Optional.of(new TrainingProgram("Mass")));
+        when(exerciseRepository.save(any(Exercise.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(workoutRepository.save(any(Workout.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        WorkoutDto created = workoutService.addWorkoutWithExercises(request);
+
+        assertThat(created.exercisesCount()).isEqualTo(1);
+        verify(exerciseRepository).save(any(Exercise.class));
+    }
+
+    @Test
+    void shouldThrowWhenCreateWorkoutHasMissingExercises() {
+        WorkoutCreateUpdateRequest request = new WorkoutCreateUpdateRequest(
+                "Title",
+                "Type",
+                45,
+                LocalDateTime.now().plusDays(2),
+                1L,
+                2L,
+                List.of(10L, 11L)
+        );
+
+        when(workoutRepository.existsByTitleIgnoreCaseAndScheduledAt(anyString(), any())).thenReturn(false);
+        when(athleteRepository.findById(1L)).thenReturn(Optional.of(new Athlete()));
+        when(trainingProgramRepository.findById(2L)).thenReturn(Optional.of(new TrainingProgram("Mass")));
+        when(exerciseRepository.findAllById(List.of(10L, 11L))).thenReturn(List.of(new Exercise("Only one")));
+
+        assertThatThrownBy(() -> workoutService.createWorkout(request))
+                .isInstanceOf(EntityNotFoundException.class)
+                .hasMessage("One or more exercises were not found");
+    }
+
+    @Test
+    void shouldFailBulkTransactionalWhenNormalizationLeavesNoExercises() {
+        WorkoutWithExercisesRequest request = new WorkoutWithExercisesRequest(
+                "Bulk request",
+                "Type",
+                35,
+                LocalDateTime.now().plusDays(1),
+                1L,
+                1L,
+                Arrays.asList(null, " ", "\t")
+        );
+
+        when(workoutRepository.existsByTitleIgnoreCaseAndScheduledAt(anyString(), any())).thenReturn(false);
+        when(athleteRepository.findById(1L)).thenReturn(Optional.of(new Athlete()));
+        when(trainingProgramRepository.findById(1L)).thenReturn(Optional.of(new TrainingProgram("Mass")));
+
+        assertThatThrownBy(() -> workoutService.addWorkoutsWithExercisesBulkTransactional(List.of(request)))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("exerciseNames must contain at least one value");
     }
 }

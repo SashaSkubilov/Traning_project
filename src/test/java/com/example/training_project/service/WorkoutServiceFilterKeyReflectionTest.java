@@ -54,6 +54,55 @@ class WorkoutServiceFilterKeyReflectionTest {
                 null,
                 PageRequest.of(1, 20, Sort.by("title").descending())
         );
+        Object withDifferentPageSize = forQuery.invoke(
+                null,
+                jpqlType,
+                "Strength\nType",
+                "Coach\rName",
+                null,
+                PageRequest.of(0, 10, Sort.unsorted())
+        );
+        Object nativeType = forQuery.invoke(
+                null,
+                Enum.valueOf((Class<Enum>) queryTypeClass.asSubclass(Enum.class), "NATIVE"),
+                "Strength\nType",
+                "Coach\rName",
+                null,
+                PageRequest.of(0, 20, Sort.unsorted())
+        );
+        Object withDifferentWorkoutType = forQuery.invoke(
+                null,
+                jpqlType,
+                "Cardio",
+                "Coach\rName",
+                null,
+                PageRequest.of(0, 20, Sort.unsorted())
+        );
+        Object withDifferentCoach = forQuery.invoke(
+                null,
+                jpqlType,
+                "Strength\nType",
+                "Other coach",
+                null,
+                PageRequest.of(0, 20, Sort.unsorted())
+        );
+        Object withDifferentProgram = forQuery.invoke(
+                null,
+                jpqlType,
+                "Strength\nType",
+                "Coach\rName",
+                "Other program",
+                PageRequest.of(0, 20, Sort.unsorted())
+        );
+        Object withDifferentSortOnly = forQuery.invoke(
+                null,
+                jpqlType,
+                "Strength\nType",
+                "Coach\rName",
+                null,
+                PageRequest.of(0, 20, Sort.by("scheduledAt").ascending())
+        );
+
 
         Method toLogSafeString = keyClass.getDeclaredMethod("toLogSafeString");
         toLogSafeString.setAccessible(true);
@@ -65,9 +114,27 @@ class WorkoutServiceFilterKeyReflectionTest {
         assertThat(first.equals("unexpected")).isFalse();
         assertThat(first).isEqualTo(second);
         assertThat(first).isNotEqualTo(withSortedPage);
+        assertThat(first).isNotEqualTo(withDifferentPageSize);
+        assertThat(first).isNotEqualTo(nativeType);
+        assertThat(first).isNotEqualTo(withDifferentWorkoutType);
+        assertThat(first).isNotEqualTo(withDifferentCoach);
+        assertThat(first).isNotEqualTo(withDifferentProgram);
+        assertThat(first).isNotEqualTo(withDifferentSortOnly);
         assertThat(first.hashCode()).isEqualTo(second.hashCode());
         assertThat(logSafe).doesNotContain("\n").doesNotContain("\r");
         assertThat(logSafe).contains("Strength_Type").contains("Coach_Name");
         assertThat(sortedLogSafe).contains("title: DESC");
+
+        Method sanitizeForLog = keyClass.getDeclaredMethod("sanitizeForLog", String.class);
+        sanitizeForLog.setAccessible(true);
+        assertThat((String) sanitizeForLog.invoke(null, (Object) null)).isNull();
+        assertThat((String) sanitizeForLog.invoke(null, "A\r\nB")).isEqualTo("A__B");
+
+        Method values = queryTypeClass.getDeclaredMethod("values");
+        Object enumValues = values.invoke(null);
+        assertThat((Object[]) enumValues).hasSize(2);
+
+        Method valueOf = queryTypeClass.getDeclaredMethod("valueOf", String.class);
+        assertThat(valueOf.invoke(null, "NATIVE").toString()).isEqualTo("NATIVE");
     }
 }

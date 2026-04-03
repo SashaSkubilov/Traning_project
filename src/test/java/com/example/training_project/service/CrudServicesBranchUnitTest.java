@@ -1,6 +1,7 @@
 package com.example.training_project.service;
 
 import com.example.training_project.dto.AthleteCreateUpdateRequest;
+import com.example.training_project.dto.AthleteDto;
 import com.example.training_project.dto.CoachCreateUpdateRequest;
 import com.example.training_project.dto.ExerciseCreateUpdateRequest;
 import com.example.training_project.dto.TrainingProgramCreateUpdateRequest;
@@ -169,5 +170,76 @@ class CrudServicesBranchUnitTest {
         trainingProgramService.create(new TrainingProgramCreateUpdateRequest(" Mass "));
         trainingProgramService.update(4L, new TrainingProgramCreateUpdateRequest("Cutting"));
         trainingProgramService.delete(4L);
+    }
+
+    @Test
+    void athleteServiceShouldCreateAndUpdateWithCoachWhenCoachIdProvided() {
+        Coach coach = new Coach("Ivan", "Petrov");
+        Athlete athlete = new Athlete("Alex", "Smirnov", null);
+
+        when(athleteRepository.existsByFirstNameIgnoreCaseAndLastNameIgnoreCase(anyString(), anyString()))
+                .thenReturn(false);
+        when(athleteRepository.existsByFirstNameIgnoreCaseAndLastNameIgnoreCaseAndIdNot(anyString(), anyString(), anyLong()))
+                .thenReturn(false);
+        when(coachRepository.findById(5L)).thenReturn(Optional.of(coach));
+        when(athleteRepository.findById(11L)).thenReturn(Optional.of(athlete));
+        when(athleteRepository.save(any(Athlete.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        AthleteDto created = athleteService.create(new AthleteCreateUpdateRequest(" Alex ", " Smirnov ", 5L));
+        AthleteDto updated = athleteService.update(11L, new AthleteCreateUpdateRequest(" Alex ", " Smirnov ", 5L));
+
+        assertThat(created.coachName()).isEqualTo("Ivan Petrov");
+        assertThat(updated.coachName()).isEqualTo("Ivan Petrov");
+    }
+
+    @Test
+    void shouldCoverAdditionalNotFoundBranchesForCrudServices() {
+        when(athleteRepository.findById(777L)).thenReturn(Optional.empty());
+        assertThatThrownBy(() -> athleteService.getById(777L))
+                .isInstanceOf(EntityNotFoundException.class);
+
+        when(athleteRepository.findById(778L)).thenReturn(Optional.empty());
+        assertThatThrownBy(() -> athleteService.update(
+                778L,
+                new AthleteCreateUpdateRequest("A", "B", null)
+        )).isInstanceOf(EntityNotFoundException.class);
+
+        when(coachRepository.findById(779L)).thenReturn(Optional.empty());
+        assertThatThrownBy(() -> coachService.update(
+                779L,
+                new CoachCreateUpdateRequest("C", "D")
+        )).isInstanceOf(EntityNotFoundException.class);
+
+        when(exerciseRepository.findById(780L)).thenReturn(Optional.empty());
+        assertThatThrownBy(() -> exerciseService.update(
+                780L,
+                new ExerciseCreateUpdateRequest("Pull Up")
+        )).isInstanceOf(EntityNotFoundException.class);
+
+        when(trainingProgramRepository.findById(781L)).thenReturn(Optional.empty());
+        assertThatThrownBy(() -> trainingProgramService.getById(781L))
+                .isInstanceOf(EntityNotFoundException.class);
+    }
+
+    @Test
+    void trainingProgramServiceUpdateShouldPersistTrimmedName() {
+        TrainingProgram existing = new TrainingProgram("Old");
+        when(trainingProgramRepository.findById(100L)).thenReturn(Optional.of(existing));
+        when(trainingProgramRepository.existsByNameIgnoreCaseAndIdNot(anyString(), anyLong())).thenReturn(false);
+        when(trainingProgramRepository.save(any(TrainingProgram.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        var updated = trainingProgramService.update(100L, new TrainingProgramCreateUpdateRequest(" New Name "));
+
+        assertThat(updated.name()).isEqualTo("New Name");
+    }
+
+    @Test
+    void trainingProgramServiceUpdateShouldThrowWhenNameDuplicate() {
+        when(trainingProgramRepository.findById(101L)).thenReturn(Optional.of(new TrainingProgram("Old")));
+        when(trainingProgramRepository.existsByNameIgnoreCaseAndIdNot(anyString(), anyLong())).thenReturn(true);
+
+        assertThatThrownBy(() -> trainingProgramService.update(101L, new TrainingProgramCreateUpdateRequest(" Mass ")))
+                .isInstanceOf(DuplicateResourceException.class)
+                .hasMessage("Program already exists with name: Mass");
     }
 }
