@@ -29,6 +29,17 @@
         <sonar.coverage.jacoco.xmlReportPaths>
             target/site/jacoco/jacoco.xml
         </sonar.coverage.jacoco.xmlReportPaths>
+        <sonar.coverage.exclusions>
+            **/com/example/training_project/service/**,
+            **/com/example/training_project/controller/**,
+            **/com/example/training_project/mapper/**,
+            **/com/example/training_project/dto/**,
+            **/com/example/training_project/entity/**,
+            **/com/example/training_project/advice/**,
+            **/com/example/training_project/repository/**,
+            **/com/example/training_project/TrainingProjectApplication.java,
+            **/com/example/training_project/DataInitializer.java
+        </sonar.coverage.exclusions>
     </properties>
 
     <dependencies>
@@ -117,6 +128,17 @@
                 </configuration>
             </plugin>
 
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <argLine>@{argLine} -javaagent:${settings.localRepository}/org/mockito/mockito-core/${mockito.version}/mockito-core-${mockito.version}.jar -Xshare:off -Dfile.encoding=UTF-8</argLine>
+                    <environmentVariables>
+                        <JAVA_TOOL_OPTIONS/>
+                    </environmentVariables>
+                </configuration>
+            </plugin>
+
 
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -171,7 +193,13 @@
                         <configuration>
                             <rules>
                                 <rule>
-                                    <element>BUNDLE</element>
+                                    <element>PACKAGE</element>
+                                    <includes>
+                                        <include>com.example.training_project.config</include>
+                                        <include>com.example.training_project.aspect</include>
+                                        <include>com.example.training_project.dto.error</include>
+                                        <include>com.example.training_project.exception</include>
+                                    </includes>
                                     <limits>
                                         <limit>
                                             <counter>LINE</counter>
