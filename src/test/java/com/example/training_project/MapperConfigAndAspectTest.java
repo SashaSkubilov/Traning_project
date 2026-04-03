@@ -22,6 +22,7 @@ import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.Signature;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDateTime;
 
@@ -51,12 +52,29 @@ class MapperConfigAndAspectTest {
         TrainingProgramDto trainingProgramDto = new TrainingProgramMapper().toDto(program);
         WorkoutDto workoutDto = new WorkoutMapper().toDto(workout);
         WorkoutDto workoutFallbackDto = new WorkoutMapper().toDto(new Workout());
+        Workout workoutWithNullExercises = new Workout();
+        ReflectionTestUtils.setField(workoutWithNullExercises, "exercises", null);
+        WorkoutDto workoutNullExercisesDto = new WorkoutMapper().toDto(workoutWithNullExercises);
+        AthleteDto athleteWithoutCoach = new AthleteMapper().toDto(new Athlete("Solo", "Athlete", null));
+
+        Coach coachWithoutCollection = new Coach("Null", "Coach");
+        ReflectionTestUtils.setField(coachWithoutCollection, "athletes", null);
+        CoachDto coachWithoutCollectionDto = new CoachMapper().toDto(coachWithoutCollection);
+
+        TrainingProgram programWithoutCollection = new TrainingProgram("NullProgram");
+        ReflectionTestUtils.setField(programWithoutCollection, "workouts", null);
+        TrainingProgramDto programWithoutCollectionDto = new TrainingProgramMapper()
+                .toDto(programWithoutCollection);
 
         assertThat(athleteDto.coachName()).isEqualTo("Ilya Semenov");
         assertThat(coachDto.athletesCount()).isEqualTo(0);
         assertThat(exerciseDto.name()).isEqualTo("Row");
         assertThat(trainingProgramDto.workoutsCount()).isEqualTo(0);
+        assertThat(athleteWithoutCoach.coachName()).isNull();
+        assertThat(coachWithoutCollectionDto.athletesCount()).isEqualTo(0);
+        assertThat(programWithoutCollectionDto.workoutsCount()).isEqualTo(0);
         assertThat(workoutDto.exercisesCount()).isEqualTo(1);
+        assertThat(workoutNullExercisesDto.exercisesCount()).isZero();
         assertThat(workoutFallbackDto.athleteName()).isEqualTo("Unknown");
         assertThat(workoutFallbackDto.programName()).isEqualTo("No Program");
     }
