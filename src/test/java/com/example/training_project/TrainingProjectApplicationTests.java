@@ -10,4 +10,8 @@ class TrainingProjectApplicationTests {
     void contextLoads() {
     }
 
+    @Test
+    void mainShouldStartApplication() {
+        TrainingProjectApplication.main(new String[]{});
+    }
 }
