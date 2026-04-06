@@ -15,7 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 
 @Service
-public class AthleteService {
+public class  AthleteService {
 
     private final AthleteRepository athleteRepository;
 

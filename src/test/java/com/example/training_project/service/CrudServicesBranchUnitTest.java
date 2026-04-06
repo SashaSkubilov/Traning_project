@@ -1,10 +1,6 @@
 package com.example.training_project.service;
 
-import com.example.training_project.dto.AthleteCreateUpdateRequest;
-import com.example.training_project.dto.AthleteDto;
-import com.example.training_project.dto.CoachCreateUpdateRequest;
-import com.example.training_project.dto.ExerciseCreateUpdateRequest;
-import com.example.training_project.dto.TrainingProgramCreateUpdateRequest;
+import com.example.training_project.dto.*;
 import com.example.training_project.entity.Athlete;
 import com.example.training_project.entity.Coach;
 import com.example.training_project.entity.Exercise;
@@ -24,6 +20,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.List;
 import java.util.Optional;
@@ -241,5 +238,32 @@ class CrudServicesBranchUnitTest {
         assertThatThrownBy(() -> trainingProgramService.update(101L, new TrainingProgramCreateUpdateRequest(" Mass ")))
                 .isInstanceOf(DuplicateResourceException.class)
                 .hasMessage("Program already exists with name: Mass");
+    }
+
+    @SpringBootTest
+    static
+    class AsyncBusinessOperationServiceIntegrationTest {
+
+        @Autowired
+        private AsyncBusinessOperationService asyncBusinessOperationService;
+
+        @Test
+        void shouldCompleteAsyncTask() throws InterruptedException {
+            AsyncTaskCreateResponse task = asyncBusinessOperationService.startOperation();
+            AsyncTaskStatusResponse status = asyncBusinessOperationService.getStatus(task.taskId());
+
+            assertThat(status.status()).isIn(AsyncTaskStatus.PENDING, AsyncTaskStatus.RUNNING);
+
+            for (int i = 0; i < 30; i++) {
+                Thread.sleep(120);
+                status = asyncBusinessOperationService.getStatus(task.taskId());
+                if (status.status() == AsyncTaskStatus.COMPLETED) {
+                    break;
+                }
+            }
+
+            assertThat(status.status()).isEqualTo(AsyncTaskStatus.COMPLETED);
+            assertThat(status.result()).contains("Business operation completed at");
+        }
     }
 }

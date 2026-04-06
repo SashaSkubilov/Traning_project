@@ -314,3 +314,45 @@ curl -X POST "http://localhost:8080/api/workouts" \
 
 Потом повторить тот же запрос ещё раз.
 
+
+## Асинхронная бизнес-операция, потокобезопасный счётчик и race condition
+
+Добавлен отдельный контроллер `ConcurrencyController` с endpoint'ами:
+
+- `POST /api/concurrency/tasks` — стартует долгую бизнес-операцию и сразу возвращает `taskId`.
+- `GET /api/concurrency/tasks/{taskId}` — возвращает текущий статус (`PENDING`, `RUNNING`, `COMPLETED`, `FAILED`) и результат.
+- `POST /api/concurrency/counter/increment?times=1000` — потокобезопасно увеличивает счётчик на `AtomicLong`.
+- `GET /api/concurrency/counter` — текущее значение счётчика.
+- `POST /api/concurrency/counter/reset` — сброс счётчика.
+- `GET /api/concurrency/race-condition?threads=64&incrementsPerThread=10000` — демонстрирует race condition в unsafe-сценарии и решение через `AtomicInteger`.
+
+### Примеры вызовов
+
+```bash
+# 1) Запуск async-задачи
+curl -X POST "http://localhost:8080/api/concurrency/tasks"
+
+# 2) Проверка статуса
+curl "http://localhost:8080/api/concurrency/tasks/{taskId}"
+
+# 3) Демонстрация race condition (50+ потоков)
+curl "http://localhost:8080/api/concurrency/race-condition?threads=64&incrementsPerThread=10000"
+```
+
+## JMeter нагрузочное тестирование
+
+Файл тест-плана: `jmeter/concurrency-load-test.jmx`.
+
+Сценарий:
+- 80 потоков (`Thread Group`),
+- ramp-up: 10 секунд,
+- loops: 10,
+- HTTP GET на endpoint `/api/concurrency/race-condition?threads=64&incrementsPerThread=1000`.
+
+Пример запуска (non-GUI):
+
+```bash
+jmeter -n -t jmeter/concurrency-load-test.jmx -l jmeter/results/concurrency-results.jtl -e -o jmeter/results/report
+```
+
+Результаты сохраняются в `jmeter/results/concurrency-results.jtl` и HTML-отчёт `jmeter/results/report`.
