@@ -28,7 +28,9 @@ import java.util.Map;
 public class ConcurrencyController {
 
     private final AsyncBusinessOperationService asyncBusinessOperationService;
+
     private final ThreadSafeCounterService threadSafeCounterService;
+
     private final RaceConditionDemoService raceConditionDemoService;
 
     public ConcurrencyController(final AsyncBusinessOperationService asyncBusinessOperationService,

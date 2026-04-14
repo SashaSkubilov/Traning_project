@@ -12,6 +12,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class AsyncBusinessOperationService {
 
     private final Map<String, AsyncTaskState> taskStorage = new ConcurrentHashMap<>();
+
     private final AsyncBusinessOperationExecutor asyncBusinessOperationExecutor;
 
     public AsyncBusinessOperationService(final AsyncBusinessOperationExecutor asyncBusinessOperationExecutor) {
