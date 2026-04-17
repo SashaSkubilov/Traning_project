@@ -321,7 +321,7 @@ curl -X POST "http://localhost:8080/api/workouts" \
 
 - `POST /api/concurrency/tasks` — стартует долгую бизнес-операцию и сразу возвращает `taskId`.
 - `GET /api/concurrency/tasks/{taskId}` — возвращает текущий статус (`PENDING`, `RUNNING`, `COMPLETED`, `FAILED`) и результат.
-- `POST /api/concurrency/counter/increment?times=1000` — потокобезопасно увеличивает счётчик на `AtomicLong`.
+- `POST /api/concurrency/counter/increment' — потокобезопасно увеличивает счётчик на `AtomicLong` на 1.
 - `GET /api/concurrency/counter` — текущее значение счётчика.
 - `POST /api/concurrency/counter/reset` — сброс счётчика.
 - `GET /api/concurrency/race-condition?threads=64&incrementsPerThread=10000` — демонстрирует race condition в unsafe-сценарии и решение через `AtomicInteger`.

@@ -56,8 +56,8 @@ public class ConcurrencyController {
 
     @PostMapping("/counter/increment")
     @Operation(summary = "Увеличить потокобезопасный счётчик")
-    public Map<String, Long> incrementCounter(@RequestParam(defaultValue = "1") final int times) {
-        long currentValue = threadSafeCounterService.incrementMany(times);
+    public Map<String, Long> incrementCounter() {
+        long currentValue = threadSafeCounterService.incrementAndGet();
         return Map.of("counter", currentValue);
     }
 

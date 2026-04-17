@@ -15,7 +15,7 @@ public class AsyncBusinessOperationExecutor {
                                                     final Map<String, AsyncTaskState> taskStorage) {
         taskStorage.put(taskId, AsyncTaskState.running());
         try {
-            Thread.sleep(1_500);
+            Thread.sleep(20000);
             String result = "Business operation completed at " + Instant.now();
             taskStorage.put(taskId, AsyncTaskState.completed(result));
         } catch (InterruptedException interruptedException) {

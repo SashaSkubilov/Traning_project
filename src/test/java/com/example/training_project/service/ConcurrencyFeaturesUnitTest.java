@@ -11,7 +11,10 @@ class ConcurrencyFeaturesUnitTest {
     void shouldIncrementThreadSafeCounter() {
         ThreadSafeCounterService counterService = new ThreadSafeCounterService();
 
-        long value = counterService.incrementMany(3);
+        long value = 0L;
+        for (int i = 0; i < 3; i++) {
+            value = counterService.incrementAndGet();
+        }
 
         assertThat(value).isEqualTo(3);
         assertThat(counterService.getValue()).isEqualTo(3);

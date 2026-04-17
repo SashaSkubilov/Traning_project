@@ -13,14 +13,6 @@ public class ThreadSafeCounterService {
         return counter.incrementAndGet();
     }
 
-    public long incrementMany(final int times) {
-        long value = 0L;
-        for (int i = 0; i < times; i++) {
-            value = counter.incrementAndGet();
-        }
-        return value;
-    }
-
     public long getValue() {
         return counter.get();
     }
