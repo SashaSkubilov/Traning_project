@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Журнал тренировок</title>
+    <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+<header class="topbar">
+    <h1>Журнал тренировок</h1>
+</header>
+
+<main class="layout">
+    <section class="content">
+        <div class="card">
+            <div class="row row-between">
+                <h2 id="section-title"></h2>
+                <button class="btn btn-primary" id="create-btn">Добавить</button>
+            </div>
+
+            <div class="row">
+                <input id="search-input" class="input" placeholder="Поиск по таблице" />
+            </div>
+
+            <div id="table-wrap"></div>
+        </div>
+    </section>
+
+    <aside class="sidebar" id="sidebar"></aside>
+</main>
+
+<div id="modal-root"></div>
+<div id="toast-root"></div>
+
+<script type="module" src="/js/app.js"></script>
+</body>
+</html>
