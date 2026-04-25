@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Журнал тренировок</title>
+    <title>Панель тренировок</title>
     <link rel="stylesheet" href="/styles.css" />
 </head>
 <body>
 <header class="topbar">
-    <h1>Журнал тренировок</h1>
+    <h1>Панель тренировок</h1>
 </header>
 
 <main class="layout">
@@ -25,6 +25,18 @@
 
             <div id="table-wrap"></div>
         </div>
+        <section class="card reviews" aria-label="Отзывы пользователей">
+            <div class="row row-between">
+                <h2>Отзывы</h2>
+            </div>
+            <form id="review-form" class="review-form">
+                <input class="input" name="author" placeholder="Ваше имя" maxlength="60" required />
+                <input class="input" name="role" placeholder="Кто вы (например, спортсмен)" maxlength="80" required />
+                <textarea class="input" name="text" placeholder="Ваш отзыв" rows="3" maxlength="240" required></textarea>
+                <button class="btn btn-primary" type="submit">Добавить отзыв</button>
+            </form>
+            <div class="reviews-grid" id="reviews-list"></div>
+        </section>
     </section>
 
     <aside class="sidebar" id="sidebar"></aside>

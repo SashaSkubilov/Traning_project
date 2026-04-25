@@ -15,7 +15,7 @@ body {
   background: var(--bg);
 }
 .topbar { padding: 16px 24px; background: var(--card); border-bottom: 1px solid var(--line); }
-.topbar h1 { margin: 0; }
+.topbar h1 { margin: 0; font-size: clamp(1.2rem, 2vw, 1.75rem); }
 .topbar p { margin: 4px 0 0; color: var(--muted); }
 .layout { display: grid; grid-template-columns: 1fr 240px; min-height: calc(100vh - 78px); }
 .sidebar { border-left: 1px solid var(--line); background: #0b1220; padding: 12px; }
@@ -26,8 +26,10 @@ body {
 .nav-btn.active { background: #1e293b; border-color: #334155; color: #c7d2fe; font-weight: 600; }
 .content { padding: 20px; }
 .card { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 16px; }
+.content .card + .card { margin-top: 14px; }
 .row { display: flex; gap: 10px; margin-bottom: 12px; }
 .row-between { justify-content: space-between; align-items: center; }
+#table-wrap { overflow-x: auto; }
 .input, select, textarea {
   width: 100%; border: 1px solid #334155; border-radius: 10px; padding: 10px; font-size: 14px; background: #0b1220; color: #e5e7eb;
 }
@@ -54,11 +56,86 @@ th { color: var(--muted); font-weight: 600; }
 }
 .checkbox-list { border: 1px solid #334155; border-radius: 10px; padding: 8px; max-height: 180px; overflow: auto; background: #0b1220; }
 label.inline { display: flex; align-items: center; gap: 8px; margin: 6px 0; }
+.reviews-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+.review-form {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.review-form textarea,
+.review-form button {
+  grid-column: 1 / -1;
+}
+.review-item {
+  background: #0b1220;
+  border: 1px solid #334155;
+  border-radius: 12px;
+  padding: 12px;
+}
+.review-text {
+  margin: 0 0 8px;
+  line-height: 1.4;
+}
+.review-author {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+}
 @media (max-width: 900px) {
+  .topbar { padding: 14px 16px; }
+  .content { padding: 14px; }
   .layout { grid-template-columns: 1fr; }
-  .sidebar { border-left: none; border-top: 1px solid var(--line); }
+  .sidebar {
+    order: -1;
+    border-left: none;
+    border-bottom: 1px solid var(--line);
+    border-top: 1px solid var(--line);
+    padding: 8px;
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    white-space: nowrap;
+    scrollbar-width: thin;
+  }
+  .nav-btn {
+    width: auto;
+    margin-bottom: 0;
+    flex: 0 0 auto;
+  }
   .grid { grid-template-columns: 1fr; }
+  .review-form { grid-template-columns: 1fr; }
+  .reviews-grid { grid-template-columns: 1fr; }
+  th, td { padding: 8px; font-size: 13px; }
 }
 
 .pager { display: flex; justify-content: space-between; align-items: center; margin-top: 12px; gap: 8px; }
 .pager-info { color: var(--muted); font-size: 13px; }
+
+@media (max-width: 640px) {
+  .card { padding: 12px; border-radius: 14px; }
+  .row { margin-bottom: 10px; }
+  .row-between {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .row-between h2 {
+    margin: 0;
+    font-size: 1.15rem;
+  }
+  .btn {
+    width: 100%;
+    min-height: 40px;
+  }
+  .actions {
+    flex-direction: column;
+  }
+  .pager {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}

@@ -7,6 +7,25 @@ const state = {
   pageSize: 10,
 };
 
+const REVIEW_STORAGE_KEY = 'training_journal_reviews';
+const defaultReviews = [
+  {
+    author: 'Анна',
+    role: 'любитель бега',
+    text: 'Удобный интерфейс: быстро нахожу нужные тренировки и редактирую их с телефона.',
+  },
+  {
+    author: 'Дмитрий',
+    role: 'тренер',
+    text: 'Нравится, что всё в одном месте — программа, упражнения и история занятий.',
+  },
+  {
+    author: 'Мария',
+    role: 'спортсмен',
+    text: 'Фильтрация и поиск реально экономят время, особенно когда тренировок становится много.',
+  },
+];
+
 const entities = {
   coaches: {
     title: 'Тренеры',
@@ -78,6 +97,67 @@ const entities = {
 function normalizeDateTime(value) {
   if (!value) return value;
   return value.length === 16 ? `${value}:00` : value;
+}
+
+function escapeHtml(value) {
+  return String(value ?? '')
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#39;');
+}
+
+function loadReviews() {
+  try {
+    const raw = localStorage.getItem(REVIEW_STORAGE_KEY);
+    if (!raw) return [...defaultReviews];
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [...defaultReviews];
+    return parsed.filter((r) => r && r.author && r.role && r.text);
+  } catch {
+    return [...defaultReviews];
+  }
+}
+
+function saveReviews(reviews) {
+  localStorage.setItem(REVIEW_STORAGE_KEY, JSON.stringify(reviews));
+}
+
+function renderReviews() {
+  const list = document.getElementById('reviews-list');
+  if (!list) return;
+  const reviews = loadReviews();
+  list.innerHTML = reviews.map((review) => `
+    <article class="review-item">
+      <p class="review-text">“${escapeHtml(review.text)}”</p>
+      <p class="review-author">— ${escapeHtml(review.author)}, ${escapeHtml(review.role)}</p>
+    </article>
+  `).join('');
+}
+
+function setupReviewForm() {
+  const form = document.getElementById('review-form');
+  if (!form) return;
+  form.addEventListener('submit', (event) => {
+    event.preventDefault();
+    const formData = new FormData(form);
+    const review = {
+      author: String(formData.get('author') || '').trim(),
+      role: String(formData.get('role') || '').trim(),
+      text: String(formData.get('text') || '').trim(),
+    };
+    if (!review.author || !review.role || !review.text) {
+      toast('Заполните все поля отзыва');
+      return;
+    }
+    const reviews = [review, ...loadReviews()].slice(0, 12);
+    saveReviews(reviews);
+    renderReviews();
+    form.reset();
+    toast('Отзыв добавлен');
+  });
+  renderReviews();
 }
 
 function toast(message) {
@@ -276,5 +356,7 @@ document.getElementById('search-input').addEventListener('input', (e) => {
 });
 
 document.getElementById('create-btn').addEventListener('click', () => openForm());
+
+setupReviewForm();
 
 refresh().catch((e) => toast(e.message));
