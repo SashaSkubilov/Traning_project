@@ -21,9 +21,10 @@ out/
 .DS_Store
 Thumbs.db
 
-### Spring / local config overrides (оставляем основной application.properties) ###
+### Spring / local config overrides ###
 application-*.properties
 application-*.yml
+application.properties
 
 ### STS ###
 .apt_generated
