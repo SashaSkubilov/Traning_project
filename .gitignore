@@ -22,14 +22,13 @@ out/
 Thumbs.db
 
 ### Spring / local config overrides ###
+# Игнорируем ВСЕ application-*.properties
 application-*.properties
-application-*.yml
 
-# Но НЕ игнорируем railway конфиг
+# НО НЕ игнорируем railway конфиг
 !application-railway.properties
-!**/application-railway.properties
 
-### CRITICAL: ваш локальный application.properties с паролями ###
+# Игнорируем основной application.properties с паролями
 application.properties
 
 ### STS ###
