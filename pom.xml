@@ -144,7 +144,7 @@
                 <artifactId>maven-checkstyle-plugin</artifactId>
                 <version>${maven.checkstyle.version}</version>
                 <configuration>
-                    <configLocation>checkstyle-idea.xml</configLocation>
+                    <configLocation>${project.basedir}/checkstyle-idea.xml</configLocation>
                     <consoleOutput>true</consoleOutput>
                     <failsOnError>true</failsOnError>
                 </configuration>
