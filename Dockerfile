@@ -3,7 +3,7 @@
 FROM maven:3.9.9-eclipse-temurin-21 AS builder
 WORKDIR /build
 
-COPY pom.xml mvnw ./
+COPY pom.xml mvnw checkstyle-idea.xml ./
 COPY .mvn .mvn
 RUN chmod +x mvnw
 RUN ./mvnw -q -DskipTests dependency:go-offline
