@@ -3,8 +3,11 @@
 FROM maven:3.9.9-eclipse-temurin-21 AS builder
 WORKDIR /build
 
+# Копируем всё необходимое, включая checkstyle-idea.xml
 COPY pom.xml mvnw ./
 COPY .mvn .mvn
+COPY checkstyle-idea.xml ./
+
 RUN chmod +x mvnw
 RUN ./mvnw -q -Dmaven.test.skip=true dependency:go-offline
 
