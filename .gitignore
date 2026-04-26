@@ -25,6 +25,10 @@ Thumbs.db
 application-*.properties
 application-*.yml
 
+# Но НЕ игнорируем railway конфиг
+!application-railway.properties
+!**/application-railway.properties
+
 ### CRITICAL: ваш локальный application.properties с паролями ###
 application.properties
 

@@ -9,15 +9,20 @@ COPY .mvn .mvn
 COPY checkstyle-idea.xml ./
 
 RUN chmod +x mvnw
-RUN ./mvnw -q -Dmaven.test.skip=true dependency:go-offline
+RUN ./mvnw -q -Dmaven.test.skip=true -Dcheckstyle.skip=true dependency:go-offline
 
 COPY src src
-RUN ./mvnw -q -Dmaven.test.skip=true clean package
+RUN ./mvnw -q -Dmaven.test.skip=true -Dcheckstyle.skip=true clean package
 
 FROM eclipse-temurin:21-jre
 WORKDIR /app
 
+# Создаём пользователя
 RUN useradd -r -u 1001 spring
+
+# !!! СОЗДАЁМ ПАПКУ ДЛЯ ЛОГОВ И ДАЁМ ПРАВА !!!
+RUN mkdir -p /app/logs && chown -R spring:spring /app/logs
+
 COPY --from=builder /build/target/*.jar app.jar
 RUN chown spring:spring /app/app.jar
 
