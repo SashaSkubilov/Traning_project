@@ -356,3 +356,67 @@ jmeter -n -t jmeter/concurrency-load-test.jmx -l jmeter/results/concurrency-resu
 ```
 
 Результаты сохраняются в `jmeter/results/concurrency-results.jtl` и HTML-отчёт `jmeter/results/report`.
+
+## Docker
+
+### 1) Подготовка переменных окружения
+
+```bash
+cp .env.example .env
+```
+
+При необходимости измените значения в `.env`.
+
+### 2) Запуск приложения и БД через Docker Compose
+
+```bash
+docker compose up --build -d
+```
+
+Сервисы:
+- `app` — Spring Boot приложение на `http://localhost:8080`
+- `db` — PostgreSQL
+
+### 3) Остановка
+
+```bash
+docker compose down
+```
+
+## Бесплатный PaaS (Render)
+
+Рекомендуемая схема деплоя:
+
+1. Создать `PostgreSQL` (Free) в Render.
+2. Создать `Web Service` (Free) из GitHub-репозитория.
+3. Build command:
+   ```bash
+   ./mvnw clean package -DskipTests
+   ```
+4. Start command:
+   ```bash
+   java -jar target/*.jar
+   ```
+5. Переменные окружения в Render:
+  - `SPRING_DATASOURCE_URL`
+  - `SPRING_DATASOURCE_USERNAME`
+  - `SPRING_DATASOURCE_PASSWORD`
+  - `SPRING_JPA_HIBERNATE_DDL_AUTO=update`
+  - `SERVER_PORT=8080`
+6. Healthcheck path: `/swagger-ui.html` (или `/`).
+
+## GitHub Actions CI/CD
+
+Добавлен workflow `.github/workflows/ci-cd.yml`:
+
+- **build + test**: `./mvnw clean verify`
+- **docker build**: сборка Docker-образа
+- **deploy**: запуск deploy hook в Render
+- **healthcheck**: проверка доступности приложения после деплоя
+
+### Secrets для GitHub
+
+Добавьте в `Settings -> Secrets and variables -> Actions`:
+
+- `RENDER_DEPLOY_HOOK_URL` — deploy hook URL из Render.
+- `HEALTHCHECK_URL` — URL для проверки (например `https://<app>.onrender.com/swagger-ui.html`).
