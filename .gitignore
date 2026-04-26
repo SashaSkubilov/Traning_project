@@ -24,6 +24,8 @@ Thumbs.db
 ### Spring / local config overrides ###
 application-*.properties
 application-*.yml
+
+### CRITICAL: ваш локальный application.properties с паролями ###
 application.properties
 
 ### STS ###
