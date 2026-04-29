@@ -140,10 +140,18 @@ label.inline { display: flex; align-items: center; gap: 8px; margin: 6px 0; }
   }
 }
 
-/* Сдвиг кнопок "Сохранить" и "Отмена" вниз на 8px */
 #entity-form .row {
   margin-top: 8px;
   display: flex;
   justify-content: flex-end;
   gap: 12px;
+}
+
+input[type="datetime-local"] {
+  color-scheme: dark;
+}
+
+input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+  cursor: pointer;
 }
