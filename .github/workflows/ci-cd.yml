@@ -1,13 +1,13 @@
 name: CI/CD
 
 on:
+  pull_request:
   push:
     branches: ["main"]
-  pull_request:
   workflow_dispatch:
 
 jobs:
-  build-test:
+  ci:
     name: Build & Test
     runs-on: ubuntu-latest
 
@@ -25,55 +25,33 @@ jobs:
       - name: Make Maven wrapper executable
         run: chmod +x ./mvnw
 
-      - name: Validate wrapper
-        run: ./mvnw -N wrapper:wrapper -Dmaven=3.9.10
-
       - name: Build and run tests
         run: ./mvnw clean verify
 
       - name: Build Docker image
         run: docker build -t training-project:${{ github.sha }} .
 
-  deploy:
-    name: Deploy & Healthcheck
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    needs: build-test
+  healthcheck:
+    name: Post-deploy healthcheck (Railway)
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push' && secrets.HEALTHCHECK_URL != ''
+    needs: ci
     runs-on: ubuntu-latest
 
     steps:
-      - name: Validate deploy secrets
-        env:
-          RENDER_DEPLOY_HOOK_URL: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
-          HEALTHCHECK_URL: ${{ secrets.HEALTHCHECK_URL }}
-        run: |
-          if [ -z "$RENDER_DEPLOY_HOOK_URL" ]; then
-            echo "RENDER_DEPLOY_HOOK_URL secret is missing"
-            exit 1
-          fi
-          if [ -z "$HEALTHCHECK_URL" ]; then
-            echo "HEALTHCHECK_URL secret is missing"
-            exit 1
-          fi
-
-      - name: Trigger Render deploy
-        env:
-          RENDER_DEPLOY_HOOK_URL: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
-        run: curl -fsS -X POST "$RENDER_DEPLOY_HOOK_URL"
-
-      - name: Wait for deploy
+      - name: Wait for Railway auto-deploy
         run: sleep 45
 
       - name: Healthcheck with retries
         env:
           HEALTHCHECK_URL: ${{ secrets.HEALTHCHECK_URL }}
         run: |
-          for i in {1..10}; do
+          for i in {1..12}; do
             if curl -fsS "$HEALTHCHECK_URL"; then
               echo "Healthcheck passed"
               exit 0
             fi
-            echo "Healthcheck attempt $i failed, retrying in 15s..."
-            sleep 15
+            echo "Healthcheck attempt $i failed, retrying in 10s..."
+            sleep 10
           done
           echo "Healthcheck failed after retries"
           exit 1
