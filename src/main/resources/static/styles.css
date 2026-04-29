@@ -152,6 +152,6 @@ input[type="datetime-local"] {
 }
 
 input[type="datetime-local"]::-webkit-calendar-picker-indicator {
-  filter: invert(1);
+  filter: brightness(0) saturate(100%) invert(88%) sepia(10%) saturate(247%) hue-rotate(182deg) brightness(102%) contrast(95%);
   cursor: pointer;
 }

@@ -291,6 +291,11 @@ function openForm(id = null) {
     try {
       const form = new FormData(e.target);
       const values = formToObject(form, cfg.form);
+      const validationError = validateWorkoutForm(values);
+      if (validationError) {
+              toast(validationError);
+              return;
+      }
       const payload = cfg.payload(values);
       if (id) await request(`${cfg.endpoint}/${id}`, { method: 'PUT', body: JSON.stringify(payload) });
       else await request(cfg.endpoint, { method: 'POST', body: JSON.stringify(payload) });
@@ -307,11 +312,12 @@ function renderField(field, row) {
   const value = row?.[field.key] ?? '';
   if (field.type === 'select') {
     const opts = state.refs[field.ref] || [];
-    return `<label>${field.label}<select class="input" name="${field.key}" ${field.required ? 'required' : ''}><option value="">Выберите...</option>${opts.map((o) => `<option value="${o.id}" ${String(value) === String(o.id) ? 'selected' : ''}>${optionLabel(field.ref, o)}</option>`).join('')}</select></label>`;
-  }
+    const fallbackName = field.key === 'athleteId' ? row?.athleteName : row?.programName;
+    const resolvedValue = value || opts.find((o) => optionLabel(field.ref, o) === fallbackName)?.id || '';
+    return `<label>${field.label}<select class="input" name="${field.key}" ${field.required ? 'required' : ''}><option value="">Выберите...</option>${opts.map((o) => `<option value="${o.id}" ${String(resolvedValue) === String(o.id) ? 'selected' : ''}>${optionLabel(field.ref, o)}</option>`).join('')}</select></label>`;
+    }
   if (field.type === 'multiselect') {
     const opts = state.refs[field.ref] || [];
-    // Преобразуем value в массив (если это строка с JSON или просто массив)
     let selectedIds = [];
     if (Array.isArray(value)) {
       selectedIds = value.map(v => String(v));
@@ -340,6 +346,18 @@ function formToObject(formData, fields) {
     }
   }
   return obj;
+}
+
+function validateWorkoutForm(values) {
+  if (state.entity !== 'workouts') return null;
+  const duration = Number(values.durationMinutes);
+  if (!Number.isFinite(duration) || duration < 1) {
+    return 'Длительность должна быть больше 0';
+  }
+  if (!values.exerciseIds || values.exerciseIds.length === 0) {
+    return 'Выберите хотя бы одно упражнение';
+  }
+  return null;
 }
 
 async function removeItem(id) {

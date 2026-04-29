@@ -322,6 +322,7 @@ public class WorkoutService {
 
         workout.setTitle(request.title());
         workout.setTitle(request.title().trim());
+        workout.setDurationMinutes(request.durationMinutes());
         workout.setType(request.type().trim());
         workout.setScheduledAt(request.scheduledAt());
         workout.setAthlete(athlete);

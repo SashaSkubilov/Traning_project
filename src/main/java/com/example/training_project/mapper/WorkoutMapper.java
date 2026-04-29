@@ -4,9 +4,6 @@ import com.example.training_project.dto.WorkoutDto;
 import com.example.training_project.entity.Workout;
 import org.springframework.stereotype.Component;
 
-/**
- * Mapper for converting Workout entity to DTO.
- */
 @Component
 public class WorkoutMapper {
 
