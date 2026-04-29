@@ -21,7 +21,9 @@ jobs:
           cache: maven
 
       - name: Run checks and tests
-        run: ./mvnw clean verify
+        run: |
+          chmod +x ./mvnw
+          ./mvnw clean verify
 
       - name: Build Docker image
         run: docker build -t training-project:${{ github.sha }} .
