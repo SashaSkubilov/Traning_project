@@ -22,13 +22,14 @@ jobs:
           java-version: '21'
           cache: maven
 
+      - name: Make Maven wrapper executable
+        run: chmod +x ./mvnw
+
       - name: Validate wrapper
         run: ./mvnw -N wrapper:wrapper -Dmaven=3.9.10
 
       - name: Build and run tests
-        run: |
-          chmod +x ./mvnw
-          ./mvnw clean verify
+        run: ./mvnw clean verify
 
       - name: Build Docker image
         run: docker build -t training-project:${{ github.sha }} .
