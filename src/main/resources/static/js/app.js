@@ -311,7 +311,21 @@ function renderField(field, row) {
   }
   if (field.type === 'multiselect') {
     const opts = state.refs[field.ref] || [];
-    return `<label>${field.label}<div class="checkbox-list">${opts.map((o) => `<label class="inline"><input type="checkbox" name="${field.key}" value="${o.id}"/> ${optionLabel(field.ref, o)}</label>`).join('')}</div></label>`;
+    // Преобразуем value в массив (если это строка с JSON или просто массив)
+    let selectedIds = [];
+    if (Array.isArray(value)) {
+      selectedIds = value.map(v => String(v));
+    } else if (typeof value === 'string' && value.startsWith('[')) {
+      try {
+        selectedIds = JSON.parse(value).map(v => String(v));
+      } catch (e) {
+        selectedIds = [];
+      }
+    } else if (value) {
+      selectedIds = String(value).split(',').map(v => v.trim());
+    }
+
+    return `<label>${field.label}<div class="checkbox-list">${opts.map((o) => `<label class="inline"><input type="checkbox" name="${field.key}" value="${o.id}" ${selectedIds.includes(String(o.id)) ? 'checked' : ''}/> ${optionLabel(field.ref, o)}</label>`).join('')}</div></label>`;
   }
   return `<label>${field.label}<input class="input" name="${field.key}" type="${field.type}" value="${value ?? ''}" ${field.required ? 'required' : ''}/></label>`;
 }
