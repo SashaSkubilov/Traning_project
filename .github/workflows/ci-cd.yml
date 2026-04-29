@@ -33,17 +33,18 @@ jobs:
 
   healthcheck:
     name: Post-deploy healthcheck (Railway)
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push' && secrets.HEALTHCHECK_URL != ''
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     needs: ci
     runs-on: ubuntu-latest
+    env:
+      HEALTHCHECK_URL: ${{ secrets.HEALTHCHECK_URL }}
 
     steps:
       - name: Wait for Railway auto-deploy
         run: sleep 45
 
       - name: Healthcheck with retries
-        env:
-          HEALTHCHECK_URL: ${{ secrets.HEALTHCHECK_URL }}
+        if: env.HEALTHCHECK_URL != ''
         run: |
           for i in {1..12}; do
             if curl -fsS "$HEALTHCHECK_URL"; then
