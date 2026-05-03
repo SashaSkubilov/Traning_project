@@ -383,40 +383,17 @@ docker compose up --build -d
 docker compose down
 ```
 
-## Бесплатный PaaS (Render)
+### Бесплатный PaaS (Railway)
 
-Рекомендуемая схема деплоя:
-
-1. Создать `PostgreSQL` (Free) в Render.
-2. Создать `Web Service` (Free) из GitHub-репозитория.
-3. Build command:
-   ```bash
-   ./mvnw clean package -DskipTests
-   ```
-4. Start command:
-   ```bash
-   java -jar target/*.jar
-   ```
-5. Переменные окружения в Render:
-  - `SPRING_DATASOURCE_URL`
-  - `SPRING_DATASOURCE_USERNAME`
-  - `SPRING_DATASOURCE_PASSWORD`
-  - `SPRING_JPA_HIBERNATE_DDL_AUTO=update`
-  - `SERVER_PORT=8080`
-6. Healthcheck path: `/swagger-ui.html` (или `/`).
+Приложение размещается в Railway через автодеплой из GitHub (дополнительный шаг деплоя в CI не требуется).
 
 ## GitHub Actions CI/CD
 
-Добавлен workflow `.github/workflows/ci-cd.yml`:
-
-- **build + test**: `./mvnw clean verify`
-- **docker build**: сборка Docker-образа
-- **deploy**: запуск deploy hook в Render
-- **healthcheck**: проверка доступности приложения после деплоя
+✅ **сборка**: `./mvnw clean verify`
+- ✅ **тесты**: запускаются в том же шаге `verify`
+- ✅ **развертывание**: выполняется автоматически Railway после push в `main`
+- ✅ **healthcheck**: отдельный job `healthcheck` в GitHub Actions после ожидания автодеплоя
 
 ### Secrets для GitHub
 
-Добавьте в `Settings -> Secrets and variables -> Actions`:
-
-- `RENDER_DEPLOY_HOOK_URL` — deploy hook URL из Render.
-- `HEALTHCHECK_URL` — URL для проверки (например `https://<app>.onrender.com/swagger-ui.html`).
+✅ `HEALTHCHECK_URL` — URL для проверки (https://lavish-celebration-production-0911.up.railway.app).
