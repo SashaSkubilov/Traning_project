@@ -69,14 +69,18 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Normalize image name
+        id: image_name
+        run: echo "repo_lower=${GITHUB_REPOSITORY,,}" >> "$GITHUB_OUTPUT"
+
       - name: Build and push image
         uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8
         with:
           context: .
           push: true
           tags: |
-            ghcr.io/${{ github.repository }}:latest
-            ghcr.io/${{ github.repository }}:${{ github.sha }}
+            ghcr.io/${{ steps.image_name.outputs.repo_lower }}:latest
+            ghcr.io/${{ steps.image_name.outputs.repo_lower }}:${{ github.sha }}
 
   deploy:
     name: Deploy to Render
