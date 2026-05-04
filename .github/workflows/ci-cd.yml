@@ -83,33 +83,27 @@ jobs:
             ghcr.io/${{ steps.image_name.outputs.repo_lower }}:${{ github.sha }}
 
   healthcheck:
-    name: Healthcheck
-    runs-on: ubuntu-latest
+    name: Post-deploy healthcheck (Railway)
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     needs: docker-image
-    if: github.event_name == 'push'
-    permissions:
-      contents: read
+    runs-on: ubuntu-latest
+    env:
+      HEALTHCHECK_URL: ${{ secrets.HEALTHCHECK_URL }}
+
     steps:
-      - name: Wait for startup
+      - name: Wait for Railway auto-deploy
         run: sleep 45
 
-      - name: Check /actuator/health with retries
-        env:
-          APP_BASE_URL: ${{ secrets.APP_BASE_URL }}
+      - name: Healthcheck with retries
+        if: env.HEALTHCHECK_URL != ''
         run: |
-          if [ -z "$APP_BASE_URL" ]; then
-            echo "APP_BASE_URL secret is not set" >&2
-            exit 1
-          fi
-          for i in {1..10}; do
-                      RESPONSE=$(curl -fsS "$APP_BASE_URL/actuator/health" || true)
-                      if echo "$RESPONSE" | grep -q '"status":"UP"'; then
-                        echo "Healthcheck passed"
-                        exit 0
-                      fi
-                      echo "Healthcheck attempt $i failed, retrying in 15s..."
-                      sleep 15
-                    done
-
-                    echo "Service is not healthy after retries" >&2
-                    exit 1
+          for i in {1..12}; do
+            if curl -fsS "$HEALTHCHECK_URL"; then
+              echo "Healthcheck passed"
+              exit 0
+            fi
+            echo "Healthcheck attempt $i failed, retrying in 10s..."
+            sleep 10
+          done
+          echo "Healthcheck failed after retries"
+          exit 1
